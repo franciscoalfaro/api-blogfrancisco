@@ -3,7 +3,7 @@ import Redes from '../models/redes.js'
 export const crearRed = async (req, res) => {
     try {
         let { name, url } = req.body;
-        const userId = req.user.id; // Suponiendo que el userId está en el token de autenticación
+        const userId = req.user.id; 
 
         // Verificar si el url comienza con "http://" o "https://"
         if (!/^https?:\/\//i.test(url)) {

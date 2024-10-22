@@ -303,71 +303,6 @@ export const upload = async (req, res) => {
 }
 
 
-export const publicListUser = async (req, res) => {
-    let itemPerPage = 3
-
-    const opciones = {
-
-        limit: itemPerPage,
-        sort: { fecha: -1 },
-        select: '-password -email -role -__v -nick'
-    }
-
-    try {
-        const usuarios = await User.paginate({}, opciones);
-
-        if (!usuarios) return res.status(404).json({ 
-            status: "error", 
-            message: "no se han encontrado usuarios" 
-        })
-
-        return res.status(200).send({
-            status: "success",
-            message: "usuarios encontrados",
-            usuarios: usuarios.docs,
-            totalPages: usuarios.totalPages,
-            totalDocs: usuarios.totalDocs,
-            itempage: usuarios.limit,
-            page: usuarios.page,
-
-        })
-
-    } catch (error) {
-        return res.status(500).json({
-            status: 'error',
-            message: 'Error al listar los articulos',
-            error: error.message,
-        });
-
-    }
-}
-
-
-export const publicProfile = async (req, res) => {
-    try {
-        // Recibir parámetro id por URL
-        const id = req.params.id;
-
-        // Buscar el usuario por ID y excluir campos sensibles
-        const userProfile = await User.findById(id).select({ "password": 0, "role": 0, "nick":0});
-
-        if (!userProfile) {
-            return res.status(404).json({ status: "error", message: "NO SE HA ENCONTRADO EL USUARIO" });
-        }
-
-        // Enviar la respuesta con el perfil del usuario
-        return res.status(200).json({
-            status: "success",
-            message: "profile found successfully",
-            user: userProfile
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ status: "error", message: "error al obtener el usuario en el servidor" });
-    }
-};
-
-
 //eliminar usuario/cuenta
 export const remove = async (req, res) => {
     try {
@@ -442,3 +377,69 @@ export const list = (req, res) => {
 
     }
 }
+
+//rutas publicas
+
+export const publicListUser = async (req, res) => {
+    let itemPerPage = 3
+
+    const opciones = {
+
+        limit: itemPerPage,
+        sort: { fecha: -1 },
+        select: '-password -email -role -__v -nick'
+    }
+
+    try {
+        const usuarios = await User.paginate({}, opciones);
+
+        if (!usuarios) return res.status(404).json({ 
+            status: "error", 
+            message: "no se han encontrado usuarios" 
+        })
+
+        return res.status(200).send({
+            status: "success",
+            message: "usuarios encontrados",
+            usuarios: usuarios.docs,
+            totalPages: usuarios.totalPages,
+            totalDocs: usuarios.totalDocs,
+            itempage: usuarios.limit,
+            page: usuarios.page,
+
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error al listar los articulos',
+            error: error.message,
+        });
+
+    }
+}
+
+
+export const publicProfile = async (req, res) => {
+    try {
+        // Recibir parámetro id por URL
+        const id = req.params.id;
+
+        // Buscar el usuario por ID y excluir campos sensibles
+        const userProfile = await User.findById(id).select({ "password": 0, "role": 0, "nick":0});
+
+        if (!userProfile) {
+            return res.status(404).json({ status: "error", message: "NO SE HA ENCONTRADO EL USUARIO" });
+        }
+
+        // Enviar la respuesta con el perfil del usuario
+        return res.status(200).json({
+            status: "success",
+            message: "profile found successfully",
+            user: userProfile
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ status: "error", message: "error al obtener el usuario en el servidor" });
+    }
+};

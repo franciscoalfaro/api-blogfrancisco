@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import * as UserController from "../controller/UserController.js";
+import * as UserController from "../controller/userController.js";
 import { auth as checkAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.delete("/delete/:id", checkAuth, UserController.remove)
 
 //rutas publicas
 router.get("/lastprofiles/:page?", UserController.publicListUser)
-router.get("/profileselect/:id", UserController.publicProfile)
+router.get("/profilepublic/:id", UserController.publicProfile)
 
 // Exportar router
 export default router;
