@@ -1,14 +1,25 @@
 import Redes from '../models/redes.js'
+import User from '../models/user.js';
 
 export const crearRed = async (req, res) => {
     try {
         let { name, url } = req.body;
-        const userId = req.user.id; 
+        const userId = req.user.id;
+
+        if (!name || !url) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'se debe de enviar los valores nombre de la url y url',
+
+            });
+        }
 
         // Verificar si el url comienza con "http://" o "https://"
         if (!/^https?:\/\//i.test(url)) {
             url = `https://${url}`; // Si no comienza, agregar "https://"
         }
+
+
 
         const nuevaRed = new Redes({
             userId,
@@ -65,7 +76,7 @@ export const actualizarRed = async (req, res) => {
         const { id } = req.params;
         let { name, url } = req.body;
         const userId = req.user.id;
-        
+
         // Verificar si el url comienza con "http://" o "https://"
         if (!/^https?:\/\//i.test(url)) {
             url = `https://${url}`; // Si no comienza, agregar "https://"
@@ -129,16 +140,59 @@ export const eliminarRed = async (req, res) => {
 //listar redes publicas
 export const listado = async (req, res) => {
     try {
-        // Obtener todos las redes sin paginación y excluyendo el campo userId
-        const redes = await Redes.find({}, "-userId").sort({ fecha: -1 });
+        const { page = 1, limit = 10 } = req.query;
+        const userId = req.params.id;
 
+        const redes = await Redes.paginate(
+            { userId },
+            { page, limit, sort: { fecha: -1 } }
+        );
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Listado de redes',
+            redes: redes.docs,
+            totalPages: redes.totalPages,
+            totalItems: redes.totalDocs,
+            itemsPerPage: redes.limit,
+            currentPage: redes.page
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error al listar las redes',
+            error: error.message
+        });
+    }
+};
+
+//listar redes del usuario admin / franciscoalfar@gmail.com
+export const redAdmin = async (req, res) => {
+    try {
+        // Buscar al usuario con el email especificado
+        const usuario = await User.findOne({ email: "franciscoalfar@gmail.com" });
+
+        // Verificar si se encontró el usuario
+        if (!usuario) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        // Buscar redes asociadas al userId del usuario encontrado y ordenarlas por fecha descendente
+        const redes = await Redes.find({ userId: usuario._id }).sort({ fecha: -1 }).select({ "-userId": 0 });
+
+        // Enviar respuesta con éxito
         return res.status(200).json({
             status: 'success',
             message: 'Listado de redes',
             redes: redes,
             totalItems: redes.length
         });
+
     } catch (error) {
+        // Manejar cualquier error que ocurra durante la ejecución
         return res.status(500).json({
             status: 'error',
             message: 'Error al listar las redes',
