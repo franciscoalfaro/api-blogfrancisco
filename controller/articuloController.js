@@ -322,26 +322,25 @@ export const media = (req, res) => {
 export const buscador = async (req, res) => {
     try {
         let busqueda = req.params.articulo;
-        console.log(busqueda)
-
         busqueda = busqueda.replace(/\+/g, ' ');
 
-        let page = 1
+        let page = 1;
         if (req.params.page) {
-            page = req.params.page
+            page = req.params.page;
         }
-        page = parseInt(page)
+        page = parseInt(page);
 
-        let itemPerPage = 5
+        let itemPerPage = 4;
 
         const options = {
             page,
             limit: itemPerPage,
             sort: { fecha: -1 },
-            select: '-password', // Excluir campos sensibles si es necesario
+            select: '-password', // Selecciona los campos que necesitas
+            populate: [] // Populación adicional si es necesario
         };
 
-        // Utilizar expresiones regulares para realizar una búsqueda insensible a mayúsculas y minúsculas
+        // Realiza la búsqueda de artículos con expresiones regulares insensibles a mayúsculas y minúsculas
         const resultados = await Articulo.paginate({
             $or: [
                 { "titulo": { $regex: busqueda, $options: "i" } },
@@ -351,22 +350,37 @@ export const buscador = async (req, res) => {
             ]
         }, options);
 
+        if (!resultados.docs.length) {
+            return res.status(404).json({
+                status: "error",
+                message: "No se encontraron artículos para la búsqueda"
+            });
+        }
+
+        // Para cada artículo encontrado, obtener su contador de visualizaciones
+        const articulosConContador = await Promise.all(resultados.docs.map(async articulo => {
+            const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
+            return {
+                ...articulo.toObject(), // Convierte el artículo en objeto plano
+                vistas: contador ? contador.visto : 0 // Agrega el contador de vistas si existe
+            };
+        }));
+
         return res.status(200).json({
             status: "success",
             message: "Búsqueda completada",
-            resultados: resultados.docs,
+            resultados: articulosConContador,
             page: resultados.page,
             totalDocs: resultados.totalDocs,
             totalPages: resultados.totalPages,
             itemPerPage: resultados.limit
-
-
         });
+
     } catch (error) {
         return res.status(500).json({
             status: "error",
             message: "Error al realizar la búsqueda",
-            error: error.message,
+            error: error.message
         });
     }
 };
@@ -374,57 +388,65 @@ export const buscador = async (req, res) => {
 
 //end-point para listar todos los articulos
 export const listArticulos = async (req, res) => {
-    let page = 1
-    if (req.params.page) {
-        page = req.params.page
-    }
-    page = parseInt(page)
-
-    let itemPerPage = 6
+    let page = req.params.page ? parseInt(req.params.page) : 1; // Asignación de la página
+    const itemPerPage = 1; // Número de artículos por página
 
     const opciones = {
         page: page,
         limit: itemPerPage,
         sort: { fecha: -1 },
         populate: 'categoria'
-    }
+    };
 
     try {
-        const articulos = await Articulo.paginate({}, opciones);
+        const articulos = await Articulo.paginate({}, opciones); // Obtención de artículos
 
-        if (!articulos) return res.status(404).json({
-            status: "error",
-            message: "no se han encontrado articulos"
-        })
+        if (!articulos.docs.length) {
+            return res.status(404).json({
+                status: "error",
+                message: "No se han encontrado artículos"
+            });
+        }
 
+        // Poblamos el campo userId para cada artículo
         await Articulo.populate(articulos.docs, { path: 'userId', select: '-password -email -role -__v -surname -create_at' });
+
+        // Mapeamos para incluir el contador de visitas en la respuesta
+        const articulosConContador = await Promise.all(articulos.docs.map(async (articulo) => {
+            const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
+            return {
+                ...articulo.toObject(), // Convertimos el documento a un objeto plano
+                vistas: contador ? contador.visto : 0, // Agregamos el contador de visitas
+            };
+        }));
 
         return res.status(200).send({
             status: "success",
-            message: "articulos encontrados",
-            articulos: articulos.docs,
-
-            page: articulos.page,
+            message: "Artículos encontrados",
+            articulos: articulosConContador, // Enviamos los artículos con el contador de visitas
             totalDocs: articulos.totalDocs,
             totalPages: articulos.totalPages,
-            itemPerPage: articulos.limit,
-            categoria: articulos.categoria
-        })
+            itemPerPage: articulos.limit
+        });
 
     } catch (error) {
         return res.status(500).json({
             status: 'error',
-            message: 'Error al listar los articulos',
+            message: 'Error al listar los artículos',
             error: error.message,
         });
-
     }
-}
+};
+
+
+
 
 //end-point para mostrar 1 articulo - para mostrar o traer 1 articulo cuando se haga clic en leer desde el front
-export const buscarArticulo = async (req, res) => {
+export const leerArticulo = async (req, res) => {
     try {
         const idArticulo = req.params.id;
+
+        // Buscar el artículo por ID
         const articulo = await Articulo.findById(idArticulo).populate({
             path: 'userId',
             select: '-password -email -role -__v'
@@ -433,13 +455,20 @@ export const buscarArticulo = async (req, res) => {
         if (!articulo) {
             return res.status(404).json({
                 status: "error",
-                mensaje: "Articulo no encontrado"
+                mensaje: "Artículo no encontrado"
             });
         }
 
+        // Buscar el contador de vistas asociado al artículo
+        const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
+
+        // Devolver el artículo con el contador de vistas (sin incrementar)
         return res.status(200).json({
             status: "success",
-            articulo
+            articulo: {
+                ...articulo.toObject(),
+                vistas: contador ? contador.visto : 0  // Agrega el contador de vistas
+            }
         });
     } catch (error) {
         return res.status(500).json({
@@ -450,7 +479,8 @@ export const buscarArticulo = async (req, res) => {
     }
 };
 
-//listar mas vistos
+
+//listar articulos mas vistos
 export const listMasVistos = async (req, res) => {
     try {
         // Obtener los contadores de visualización, ordenados por vistas y limitando a 3
@@ -540,7 +570,7 @@ export const listMisArticulos = async (req, res) => {
     }
 }
 
-//end-point para buscar las publicaciones por un Id de usuario
+//end-point para buscar todas las publicaciones por un Id de usuario
 export const listArticulosPorId = async (req, res) => {
     const userId = req.params.id;
 

@@ -37,15 +37,20 @@ router.delete("/deleteimagen/:id", checkAuth,ArticuloController.eliminarImagen)
 router.get("/search/:articulo/:page?", ArticuloController.buscador);
 
 //consultar y traer el articulo por el id
-router.get("/obtenido/:id", ArticuloController.buscarArticulo)
+router.get("/obtenido/:id", ArticuloController.leerArticulo)
 
 //listar los articulos
 router.get("/list/:page?", ArticuloController.listArticulos)
 router.get("/ultimos/", ArticuloController.listMasVistos)
 router.get("/misarticulos/:page?",checkAuth, ArticuloController.listMisArticulos)
 
+
+
+//esto es para listar los articulos de un usuario buscado
 router.get("/articulouser/:id/:page?", ArticuloController.listArticulosPorId)
 
-router.post("/publicado/:id", ArticuloController.incrementarVisualizaciones )
+//contador de publicaciones es publico para saber cuantos usuarios visualizan la publicacion
+router.post("/aumentar/:id", ArticuloController.incrementarVisualizaciones )
+
 
 export default router;
