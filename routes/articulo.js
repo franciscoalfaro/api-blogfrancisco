@@ -19,6 +19,7 @@ const storage = multer.diskStorage({
     }
 })
 
+
 const uploads = multer({storage})
 
 //crear, eliminar, update

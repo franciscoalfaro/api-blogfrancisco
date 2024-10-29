@@ -16,9 +16,11 @@ app.use(cors({
     exposedHeaders: ['Content-Disposition']
   }));
 
-//conertir los datos del body a obj js
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+
+// Convertir los datos del body a objeto JS con límites ajustados
+app.use(express.json({ limit: '10mb' })); // Ajusta el límite a 10 MB
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Ajusta el límite a 10 MB
+
 
 
 //cargar rutas

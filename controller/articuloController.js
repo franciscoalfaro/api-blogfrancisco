@@ -13,7 +13,7 @@ import sanitizerService from '../services/sanitizarContenido.js';
 //end-point para crear articulos
 export const crearArticulo = async (req, res) => {
     const params = req.body;
-
+    console.log(params)
     if (!params.titulo || !params.descripcion || !params.contenido || !params.categoria) {
         return res.status(400).json({
             status: "Error",
@@ -158,66 +158,80 @@ export const actualizarArticulo = async (req, res) => {
 
 //end-point para subir imagenes a los articulos
 export const upload = async (req, res) => {
-    //sacar publication id
-    const articuloId = req.params.id
+    // Sacar el ID del articulo
+    const articuloId = req.params.id;
 
-    //recoger el fichero de image
-    if (!req.file) {
+    // Recoger los archivos de imagen
+    const files = req.files;
+  
+
+    // Verificar si se proporcionaron archivos de imagen
+    if (!files || files.length === 0) {
         return res.status(404).send({
             status: "error",
-            message: "image no seleccionada"
-        })
-    }
-
-    //conseguir nombre del archivo
-    let imagen = req.file.originalname
-
-    //obtener extension del archivo
-    const imageSplit = imagen.split("\.");
-    const extension = imageSplit[1].toLowerCase();
-
-    //comprobar extension
-    if (extension != "png" && extension != "jpg" && extension != "jpeg" && extension != "gif") {
-
-        //borrar archivo y devolver respuesta en caso de que archivo no sea de extension valida.
-        const filePath = req.file.path
-        const fileDelete = fs.unlinkSync(filePath)
-
-        //devolver respuesta.        
-        return res.status(400).json({
-            status: "error",
-            mensaje: "Extension no invalida"
-        })
-
+            message: "No se seleccionaron imágenes",
+        });
     }
 
     try {
-        const ImaUpdate = await Articulo.findOneAndUpdate({ "userId": req.user.id, "_id": articuloId }, { imagen: req.file.filename }, { new: true })
+        const validExtensions = ["png", "jpg", "jpeg", "gif"];
+        const invalidFiles = [];
+        const validFiles = [];
 
+        // Verificar las extensiones de los archivos
+        files.forEach(file => {
+            const imageSplit = file.originalname.split(".");
+            const extension = imageSplit[imageSplit.length - 1].toLowerCase();
 
-        if (!ImaUpdate) {
-            return res.status(400).json({ status: "error", message: "error al actualizar" })
+            if (!validExtensions.includes(extension)) {
+                // Si la extensión no es válida, agregar el archivo a la lista de archivos inválidos
+                invalidFiles.push(file.originalname);
+            } else {
+                // Si la extensión es válida, agregar el archivo a la lista de archivos válidos
+                validFiles.push(file);
+            }
+        });
+
+        // Si hay archivos con extensiones inválidas, devolver un error
+        if (invalidFiles.length > 0) {
+            return res.status(400).json({
+                status: "error",
+                message: "Las siguientes imágenes tienen extensiones no válidas: " + invalidFiles.join(", "),
+            });
         }
-        //entrega respuesta corrrecta de image subida
+
+        // Crear un array de objetos con los datos de cada archivo
+        const imagesData = validFiles.map(file => ({
+            filename: file.filename,
+        }));
+
+        // Actualizar el articulo con las imágenes subidas
+        const articulo = await Articulo.findOneAndUpdate(
+            { "userId": req.user.id, "_id": articuloId },
+            { $push: { images: imagesData } },
+            { new: true }
+        );
+
+        if (!articulo) {
+            // Si el Articulo no se encuentra, devolver un error
+            return res.status(404).json({ status: "error", message: "Articulo no encontrado" });
+        }
+
+        // Entregar una respuesta con éxito y la información del Articulo actualizada
         return res.status(200).json({
             status: "success",
-            message: "publicacion actualizada",
-            file: req.file,
-            ImaUpdate
+            message: "Imágenes subidas correctamente",
+            articulo: articulo,
         });
     } catch (error) {
-        if (error) {
-            const filePath = req.file.path
-            const fileDelete = fs.unlinkSync(filePath)
-            return res.status(500).send({
-                status: "error",
-                message: "error al obtener la informacion en servidor",
-            })
-        }
-
+        // Manejo de errores
+        console.error(error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error interno del servidor",
+        });
     }
-
-}
+};
 
 // Controlador para eliminar una imagen
 export const eliminarImagen = async (req, res) => {
@@ -389,7 +403,7 @@ export const buscador = async (req, res) => {
 //end-point para listar todos los articulos
 export const listArticulos = async (req, res) => {
     let page = req.params.page ? parseInt(req.params.page) : 1; // Asignación de la página
-    const itemPerPage = 1; // Número de artículos por página
+    const itemPerPage = 4; // Número de artículos por página
 
     const opciones = {
         page: page,
