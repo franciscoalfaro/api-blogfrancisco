@@ -133,7 +133,6 @@ export const deleteLike = async (req, res) => {
 export const listLikes = async (req, res) => {
     try {
         const publicationId = req.params.id;
-        console.log('listado de like',publicationId)        
 
         // Obtener el contador de likes y no likes de la publicación
         const contador = await ContadorLikes.findOne({ articuloId: publicationId });

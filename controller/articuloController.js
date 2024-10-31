@@ -462,8 +462,11 @@ export const leerArticulo = async (req, res) => {
 
         // Buscar el artículo por ID
         const articulo = await Articulo.findById(idArticulo).populate({
-            path: 'userId',
+            path: 'userId categoria',
             select: '-password -email -role -__v'
+        }).populate({
+            path: 'categoria', // Asegúrate de que este campo es el correcto
+            select: 'name' // Solo selecciona el nombre de la categoría
         });
 
         if (!articulo) {
