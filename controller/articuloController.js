@@ -13,7 +13,6 @@ import sanitizerService from '../services/sanitizarContenido.js';
 //end-point para crear articulos
 export const crearArticulo = async (req, res) => {
     const params = req.body;
-    console.log(params)
     if (!params.titulo || !params.descripcion || !params.contenido || !params.categoria) {
         return res.status(400).json({
             status: "Error",
@@ -163,6 +162,7 @@ export const upload = async (req, res) => {
 
     // Recoger el archivo de imagen
     const file = req.file;
+    console.log(file)
   
     // Verificar si se proporcionó la imagen
     if (!file) {
@@ -196,7 +196,7 @@ export const upload = async (req, res) => {
         // Actualizar el artículo con la imagen de portada
         const articulo = await Articulo.findOneAndUpdate(
             { _id: articuloId, userId: req.user.id },
-            { coverImage: file.path },  // Guardar la ruta de la imagen de portada
+            { coverImage: req.file.filename},  // Guardar la ruta de la imagen de portada
             { new: true }
         );
 
