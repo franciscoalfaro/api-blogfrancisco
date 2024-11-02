@@ -156,79 +156,69 @@ export const actualizarArticulo = async (req, res) => {
     }
 };
 
-//end-point para subir imagenes a los articulos
+//end-point para subir 1 imagen que sera la portada del articulo
 export const upload = async (req, res) => {
-    // Sacar el ID del articulo
+    // Sacar el ID del artículo
     const articuloId = req.params.id;
 
-    // Recoger los archivos de imagen
-    const files = req.files;
+    // Recoger el archivo de imagen
+    const file = req.file;
   
-
-    // Verificar si se proporcionaron archivos de imagen
-    if (!files || files.length === 0) {
+    // Verificar si se proporcionó la imagen
+    if (!file) {
         return res.status(404).send({
             status: "error",
-            message: "No se seleccionaron imágenes",
+            message: "Imagen no seleccionada"
         });
     }
 
     try {
-        const validExtensions = ["png", "jpg", "jpeg", "gif"];
-        const invalidFiles = [];
-        const validFiles = [];
+        // Conseguir el nombre del archivo
+        const image = file.originalname;
+        console.log(image);
 
-        // Verificar las extensiones de los archivos
-        files.forEach(file => {
-            const imageSplit = file.originalname.split(".");
-            const extension = imageSplit[imageSplit.length - 1].toLowerCase();
+        // Obtener extensión del archivo
+        const imageSplit = image.split(".");
+        const extension = imageSplit[imageSplit.length - 1].toLowerCase();
 
-            if (!validExtensions.includes(extension)) {
-                // Si la extensión no es válida, agregar el archivo a la lista de archivos inválidos
-                invalidFiles.push(file.originalname);
-            } else {
-                // Si la extensión es válida, agregar el archivo a la lista de archivos válidos
-                validFiles.push(file);
-            }
-        });
+        // Comprobar extensión
+        if (extension !== "png" && extension !== "jpg" && extension !== "jpeg" && extension !== "gif") {
+            // Borrar archivo si la extensión no es válida
+            const filePath = file.path;
+            fs.unlinkSync(filePath);
 
-        // Si hay archivos con extensiones inválidas, devolver un error
-        if (invalidFiles.length > 0) {
             return res.status(400).json({
                 status: "error",
-                message: "Las siguientes imágenes tienen extensiones no válidas: " + invalidFiles.join(", "),
+                message: "Extensión no válida"
             });
         }
 
-        // Crear un array de objetos con los datos de cada archivo
-        const imagesData = validFiles.map(file => ({
-            filename: file.filename,
-        }));
-
-        // Actualizar el articulo con las imágenes subidas
+        // Actualizar el artículo con la imagen de portada
         const articulo = await Articulo.findOneAndUpdate(
-            { "userId": req.user.id, "_id": articuloId },
-            { $push: { images: imagesData } },
+            { _id: articuloId, userId: req.user.id },
+            { coverImage: file.path },  // Guardar la ruta de la imagen de portada
             { new: true }
         );
 
         if (!articulo) {
-            // Si el Articulo no se encuentra, devolver un error
-            return res.status(404).json({ status: "error", message: "Articulo no encontrado" });
+            return res.status(404).json({
+                status: "error",
+                message: "Artículo no encontrado"
+            });
         }
 
-        // Entregar una respuesta con éxito y la información del Articulo actualizada
+        // Responder con éxito y la información del artículo actualizado
         return res.status(200).json({
             status: "success",
-            message: "Imágenes subidas correctamente",
-            articulo: articulo,
+            message: "Imagen de portada subida correctamente",
+            articulo: articulo
         });
     } catch (error) {
         // Manejo de errores
         console.error(error);
         return res.status(500).json({
             status: "error",
-            message: "Error interno del servidor",
+            message: "Error interno del servidor"
         });
     }
 };
