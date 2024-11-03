@@ -13,6 +13,7 @@ import sanitizerService from '../services/sanitizarContenido.js';
 //end-point para crear articulos
 export const crearArticulo = async (req, res) => {
     const params = req.body;
+    console.log(params)
     if (!params.titulo || !params.descripcion || !params.contenido || !params.categoria) {
         return res.status(400).json({
             status: "Error",

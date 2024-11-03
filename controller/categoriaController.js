@@ -11,7 +11,6 @@ import Articulo from "../models/articulo.js"
 
 export const crearCategoria = async (req, res) => {
     let params = req.body;
-
     if (!params.name) {
         return res.status(400).json({
             status: "Error",

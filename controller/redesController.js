@@ -5,6 +5,7 @@ export const crearRed = async (req, res) => {
     try {
         let { name, url } = req.body;
         const userId = req.user.id;
+        console.log(req.body)
 
         if (!name || !url) {
             return res.status(400).json({
@@ -47,11 +48,12 @@ export const listarRedes = async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query;
         const userId = req.user.id; // Filtrar por el usuario autenticado
-
+        
         const redes = await Redes.paginate(
             { userId },
             { page, limit, sort: { fecha: -1 } }
         );
+
 
         return res.status(200).json({
             status: 'success',

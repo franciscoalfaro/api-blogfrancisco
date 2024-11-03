@@ -10,7 +10,7 @@ export const comment = async (req, res) => {
     try {
         const params = req.body;
         const articuloId = req.params.id
-        console.log(articuloId)
+        console.log(req.user.id)
 
 
         if (!params.text) {
@@ -25,7 +25,7 @@ export const comment = async (req, res) => {
         const newComment = new Comentario({
             comentario: params.text,
             articulo: articuloId,
-            user: req.user.id
+            userId: req.user.id
         });
         console.log(newComment)
 
@@ -50,14 +50,14 @@ export const removeComment = async (req, res) => {
         //obtener id de la publicacion
         const commentsId = req.params.id;
         const userId = req.user.id;
-        
+
 
         //buscar la publicacion comparando el id del usuario con el id de la publicacion y borrarlo
         //otra forma de buscar y elminar comentario
         //const comentario = await Comentario.findByIdAndDelete({ _id: commentsId, user: userId });
 
         const comentario = await Comentario.findByIdAndDelete({ "_id": commentsId })
-    
+
         //si no existe el comentario se responde un 404
         if (!comentario) {
             return res.status(404).json({
@@ -82,39 +82,50 @@ export const removeComment = async (req, res) => {
 }
 
 //listar comentarios
-export const listCommen = (req, res) => {
-    const publicationId = req.params.id;
-  
-    let page = 1;
-    if (req.params.page) {
-      page = req.params.page;
-    }
-    const itemsPerPage = 3;
-  
-    const options = {
-      page: page,
-      limit: itemsPerPage,
-      sort: { create_at: -1 },
-      populate: { path: 'user', select: '-password -role -__v -email -create_at' }
-    };
-    
-    Comentario.paginate({ 'publication': publicationId }, options).then((comments) => {
-        if (!comments.docs || comments.docs <= 0) {
-            return res.status(404).send({ status: "error", message: "no existen comentarios" })
+export const listCommen = async (req, res) => {
+
+    try {
+        const publicationId = req.params.id;
+
+        let page = 1;
+        if (req.params.page) {
+            page = req.params.page;
         }
-        
+        const itemsPerPage = 3;
+
+        const options = {
+            page,
+            limit: itemsPerPage,
+            sort: { create_at: -1 },
+            populate: {
+                path: 'userId',
+                select: '-password -role -__v -email -create_at'
+            }
+        };
+        const comments = await Comentario.paginate({ articulo: publicationId }, options);
+        console.log(comments)
+        if (!comments.docs || comments.docs.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No existen comentarios para esta publicación"
+            });
+        }
+
+
+
         return res.status(200).json({
-          status: "success",
-          message: "Listado de comentarios",
-          comments:comments.docs,
-          totalDocs:comments.totalDocs,
-          totalPages: comments.totalPages,
-          page:comments.page
+            status: "success",
+            message: "Listado de comentarios",
+            comments: comments.docs,
+            totalDocs: comments.totalDocs,
+            totalPages: comments.totalPages,
+            page: comments.page
         });
-      })
-      .catch((error) => {
+
+    } catch (error) {
         console.error(error);
         return res.status(500).send({ status: "error", message: "Error al obtener información del servidor" });
-      });
+
+    }
 
 }

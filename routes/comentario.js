@@ -29,6 +29,6 @@ router.delete("/deletecomment/:id", checkAuth, ComentarioController.removeCommen
 //router.post("/upload/:id",[checkAuth, uploads.single("file0")], ComentarioController.upload)
 //router.get("/media/:file", ComentarioController.media)
 
-router.get("/list",checkAuth, ComentarioController.listCommen)
+router.get("/comment/:id/:page?",ComentarioController.listCommen)
 
 export default router;
