@@ -37,7 +37,7 @@ const ArticuloSchema = Schema({
         type: Date,
         default: Date.now
     },
-    coverImage: {  // Cambio de 'image' a 'coverImage'
+    coverImage: {
         type: String,
         default: "default.png"
     },

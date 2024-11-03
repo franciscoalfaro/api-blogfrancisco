@@ -13,7 +13,6 @@ import sanitizerService from '../services/sanitizarContenido.js';
 //end-point para crear articulos
 export const crearArticulo = async (req, res) => {
     const params = req.body;
-    console.log(params)
     if (!params.titulo || !params.descripcion || !params.contenido || !params.categoria) {
         return res.status(400).json({
             status: "Error",
@@ -74,7 +73,6 @@ export const eliminarArticulo = async (req, res) => {
     try {
         const articuloId = req.params.id;
         const userId = req.user.id;
-        console.log(userId)
 
         // Buscar el artículo y verificar si el usuario logueado es el creador
         const articuloEliminar = await Articulo.findOne({ _id: articuloId, userId: userId });
@@ -163,7 +161,6 @@ export const upload = async (req, res) => {
 
     // Recoger el archivo de imagen
     const file = req.file;
-    console.log(file)
   
     // Verificar si se proporcionó la imagen
     if (!file) {
@@ -176,7 +173,6 @@ export const upload = async (req, res) => {
     try {
         // Conseguir el nombre del archivo
         const image = file.originalname;
-        console.log(image);
 
         // Obtener extensión del archivo
         const imageSplit = image.split(".");
@@ -532,7 +528,7 @@ export const listMasVistos = async (req, res) => {
 //end-point para listar los articulos del usuario logueado
 export const listMisArticulos = async (req, res) => {
     const userId = req.user.id;
-    console.log(userId)
+
     let page = 1
     if (req.params.page) {
         page = req.params.page

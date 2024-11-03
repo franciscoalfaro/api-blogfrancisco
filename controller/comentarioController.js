@@ -10,7 +10,6 @@ export const comment = async (req, res) => {
     try {
         const params = req.body;
         const articuloId = req.params.id
-        console.log(req.user.id)
 
 
         if (!params.text) {
@@ -27,7 +26,6 @@ export const comment = async (req, res) => {
             articulo: articuloId,
             userId: req.user.id
         });
-        console.log(newComment)
 
         //guardar comentario 
         const commentStored = await newComment.save();
@@ -103,7 +101,7 @@ export const listCommen = async (req, res) => {
             }
         };
         const comments = await Comentario.paginate({ articulo: publicationId }, options);
-        console.log(comments)
+
         if (!comments.docs || comments.docs.length === 0) {
             return res.status(404).json({
                 status: "error",

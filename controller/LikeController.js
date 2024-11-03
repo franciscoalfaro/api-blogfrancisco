@@ -86,7 +86,6 @@ export const deleteLike = async (req, res) => {
     try {
         const { likeId, noLikeId } = req.body; // Espera que los IDs se envíen en el cuerpo de la solicitud
         const userId = req.user.id;
-        console.log(req.body)
 
         if (!likeId && !noLikeId) {
             return res.status(400).json({

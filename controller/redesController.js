@@ -5,7 +5,6 @@ export const crearRed = async (req, res) => {
     try {
         let { name, url } = req.body;
         const userId = req.user.id;
-        console.log(req.body)
 
         if (!name || !url) {
             return res.status(400).json({

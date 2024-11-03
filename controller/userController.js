@@ -16,7 +16,7 @@ import * as jwt from '../services/jwt.js';
 export const register = async (req, res) => {
     // recoger datos de la peticion
     let params = req.body;
-    console.log(params)
+
     // comprobar datos + validacion
     if (!params.name || !params.email || !params.password) {
         return res.status(400).json({
@@ -373,7 +373,6 @@ export const list = (req, res) => {
 
     } catch (error) {
         if (error) return res.status(500).send({ status: "error", message: "error al obtener el usuario en servidor" })
-        console.log(error);
 
     }
 }
