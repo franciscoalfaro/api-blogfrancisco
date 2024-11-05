@@ -1,7 +1,7 @@
 import 'dotenv'
 import bcrypt  from 'bcrypt'
 import User  from '../models/user.js'
-import enviar  from "../middlewares/recuperarpass.js"
+import enviar  from "../services/EmailService.js"
 import nuevaclave from "../services/generatepassword.js"
 
 export const recuperarContrasena = async (req, res) => {

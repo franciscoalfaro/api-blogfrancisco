@@ -1,6 +1,6 @@
 import 'dotenv'
 import bcrypt  from 'bcrypt'
-import Contacto from "../middlewares/recuperarpass.js"
+import Contacto from "../services/EmailService.js"
 
 export const contacto = async (req, res) => {
     let params = req.body;

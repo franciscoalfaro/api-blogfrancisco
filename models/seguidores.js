@@ -3,14 +3,14 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 const { Schema, model } = mongoose;
 
 
-const LikeSchema = Schema ({
-    user:{
+const Seguidorchema = Schema ({
+    userId:{
         type:Schema.ObjectId,
         ref:"User"
     },
-    liked:{
+    creadorId:{
         type:Schema.ObjectId,
-        ref:"publication"
+        ref:"User"
     },
     create_at:{
         type:Date,
@@ -21,8 +21,8 @@ const LikeSchema = Schema ({
 
 
 
-LikeSchema.plugin(mongoosePaginate);
+Seguidorchema.plugin(mongoosePaginate);
 
-const Like = model('Like', LikeSchema, 'likes');
+const Seguidor = model('Seguidor', Seguidorchema, 'seguidores');
 
-export default Like;
+export default Seguidor;

@@ -76,4 +76,21 @@ async function enviarCorreoContacto(email, apellido,telefono,mensaje,nombre) {
 }
 
 
-export default{ enviarCorreoRecuperacion, enviarCorreoBienvenida,enviarCorreoContacto };
+async function enviarCorreoInformativo(email, nombre, publicacion) {
+    const transporter = crearTransporter();
+    const emailUser = process.env.EMAIL_USER;
+
+    const emailTemplatePath = path.join('uploads', 'html', 'informativo.html');
+    const emailTemplate = fs.readFileSync(emailTemplatePath, 'utf8');
+
+    const mailOptions = {
+        from: emailUser, // Cambia con tu dirección de correo de tu servidor
+        to: email,
+        subject: `Hola ${nombre}. he realizado una nueva publicacion`,
+        text: `Puedes leer mi nueva publicacion: ${publicacion} en www.blog.franciscoalfaro.cl/publicacion/${publicacion}`
+    };
+
+    await transporter.sendMail(mailOptions);
+}
+
+export default{ enviarCorreoRecuperacion, enviarCorreoBienvenida,enviarCorreoContacto,enviarCorreoInformativo };
