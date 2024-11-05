@@ -51,6 +51,9 @@ export const crearArticulo = async (req, res) => {
 
 
         await newArticulo.save();
+        //debe de llamar al modelo de seguidores y buscar quien me sigue y enviar el nombre y el correo para 
+        //import InformacionService from '../services/EmailService.js';
+        //const informatico = await InformacionService.enviarCorreoInformativo(name, email);
 
         return res.status(200).json({
             status: "success",
