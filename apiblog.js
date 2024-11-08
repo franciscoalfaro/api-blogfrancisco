@@ -31,6 +31,7 @@ import ComentarioRoutes from "./routes/comentario.js";
 import CategoriaRoutes from "./routes/categoria.js";
 import RedesRoutes from "./routes/redes.js";
 import LikeRoutes from "./routes/like.js";
+import SeguidorRoutes from "./routes/seguidor.js";
 import ContactoRoutes from "./routes/contacto.js";
 
 
@@ -55,6 +56,10 @@ app.use("/api/redes",RedesRoutes)
 
 //like
 app.use("/api/like",LikeRoutes)
+
+//seguidores
+app.use("/api/follow",SeguidorRoutes)
+
 
 //contacto
 app.use("/api/contacto",ContactoRoutes)

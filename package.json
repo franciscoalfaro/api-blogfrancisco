@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node apiblog.js"
+    "start": "nodemon apiblog.js"
   },
   "author": "francisco alfaro",
   "license": "MIT",
