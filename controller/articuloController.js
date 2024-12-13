@@ -5,8 +5,10 @@ import Articulo from "../models/articulo.js"
 import Categoria from "../models/categoria.js"
 import mongoosePagination from 'mongoose-paginate-v2'
 import User from "../models/user.js"
+import Seguidor from "../models/seguidores.js"
 import ContadorArticulo from "../models/ContadorArticulos.js"
 import sanitizerService from '../services/sanitizarContenido.js';
+import InformacionService from '../services/EmailService.js';
 
 
 
@@ -51,9 +53,17 @@ export const crearArticulo = async (req, res) => {
 
 
         await newArticulo.save();
-        //debe de llamar al modelo de seguidores y buscar quien me sigue y enviar el nombre y el correo para 
-        //import InformacionService from '../services/EmailService.js';
-        //const informatico = await InformacionService.enviarCorreoInformativo(name, email);
+        const seguidores = await Seguidor.find({ creadorId: userId }).populate('userId');
+
+
+        // Enviar correo informativo a cada seguidor
+        for (let seguidor of seguidores) {
+            const { name, email } = seguidor.userId;
+    
+
+            // Llamar al servicio de correo para enviar el correo informativo
+            await InformacionService.enviarCorreoInformativo(name, email, newArticulo);
+        }
 
         return res.status(200).json({
             status: "success",
