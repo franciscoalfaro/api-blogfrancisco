@@ -27,7 +27,8 @@ router.post("/create",checkAuth, ArticuloController.crearArticulo)
 router.delete("/delete/:id",checkAuth, ArticuloController.eliminarArticulo)
 router.put("/update/:id",checkAuth, ArticuloController.actualizarArticulo)
 
-//imagenes
+
+//imagen portada 
 router.post("/upload/:id",[checkAuth, uploads.single("file0")], ArticuloController.upload)
 
 router.get("/media/:file", ArticuloController.media)
