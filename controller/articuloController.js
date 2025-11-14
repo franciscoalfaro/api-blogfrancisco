@@ -9,6 +9,7 @@ import Seguidor from "../models/seguidores.js"
 import ContadorArticulo from "../models/ContadorArticulos.js"
 import sanitizerService from '../services/sanitizarContenido.js';
 import InformacionService from '../services/EmailService.js';
+import mongoose from "mongoose";
 
 
 
@@ -402,57 +403,96 @@ export const buscador = async (req, res) => {
 
 //end-point para listar todos los articulos
 export const listArticulos = async (req, res) => {
-    let page = req.params.page ? parseInt(req.params.page) : 1; // Asignación de la página
-    const itemPerPage = 4; // Número de artículos por página
-
-    const opciones = {
-        page: page,
-        limit: itemPerPage,
-        sort: { fecha: -1 },
-        populate: 'categoria'
-    };
+    const page = req.params.page ? parseInt(req.params.page) : 1;
+    const limit = 4;
+    const skip = (page - 1) * limit;
 
     try {
-        const articulos = await Articulo.paginate({}, opciones); // Obtención de artículos
+        const contadorCollection = ContadorArticulo.collection.name; 
+        console.log("Colección contador:", contadorCollection);
 
-        if (!articulos.docs.length) {
-            return res.status(404).json({
-                status: "error",
-                message: "No se han encontrado artículos"
-            });
-        }
+        const result = await Articulo.aggregate([
+            { $sort: { fecha: -1 } },
+            { $skip: skip },
+            { $limit: limit },
 
-        // Poblamos el campo userId para cada artículo
-        await Articulo.populate(articulos.docs, { path: 'userId', select: '-password -email -role -__v -surname -create_at' });
+            // Autor
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "author",
+                    pipeline: [
+                        { 
+                          $project: { 
+                            name: 1,
+                            surname: 1,
+                            image: 1
+                          }
+                        }
+                    ]
+                }
+            },
+            { $unwind: "$author" },
 
-        // Mapeamos para incluir el contador de visitas en la respuesta
-        const articulosConContador = await Promise.all(articulos.docs.map(async (articulo) => {
-            const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
-            return {
-                ...articulo.toObject(), // Convertimos el documento a un objeto plano
-                vistas: contador ? contador.visto : 0, // Agregamos el contador de visitas
-            };
-        }));
+            // CONTADOR → USANDO EL NOMBRE REAL DE LA COLECCIÓN
+            {
+                $lookup: {
+                    from: contadorCollection,  // ← AQUÍ USAMOS LA COLECCIÓN REAL
+                    localField: "_id",
+                    foreignField: "articuloId",
+                    as: "contador"
+                }
+            },
 
-        return res.status(200).send({
+            // Agregar campo vistas
+            {
+                $addFields: {
+                    vistas: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$contador.visto", 0] },
+                            0
+                        ]
+                    },
+                    Autor: "$author.name",
+                    ApellidoAutor: "$author.surname"
+                }
+            },
+
+            // Campos finales
+            {
+                $project: {
+                    titulo: 1,
+                    descripcion: 1,
+                    fecha: 1,
+                    coverImage: 1,
+                    categoria: 1,
+                    vistas: 1,
+                    Autor: 1,
+                    ApellidoAutor: 1
+                }
+            }
+        ]);
+
+        const totalDocs = await Articulo.countDocuments();
+
+        return res.status(200).json({
             status: "success",
-            message: "Artículos encontrados",
-            articulos: articulosConContador, // Enviamos los artículos con el contador de visitas
-            totalDocs: articulos.totalDocs,
-            totalPages: articulos.totalPages,
-            itemPerPage: articulos.limit
+            articulos: result,
+            totalDocs,
+            totalPages: Math.ceil(totalDocs / limit),
+            itemPerPage: limit
         });
 
     } catch (error) {
         return res.status(500).json({
-            status: 'error',
-            message: 'Error al listar los artículos',
-            error: error.message,
+            status: "error",
+            message: "Error al listar artículos",
+            error: error.message
         });
     }
 };
-
-
 
 
 //end-point para mostrar 1 articulo - para mostrar o traer 1 articulo cuando se haga clic en leer desde el front
@@ -460,33 +500,106 @@ export const leerArticulo = async (req, res) => {
     try {
         const idArticulo = req.params.id;
 
-        // Buscar el artículo por ID
-        const articulo = await Articulo.findById(idArticulo).populate({
-            path: 'userId categoria',
-            select: '-password -email -role -__v'
-        }).populate({
-            path: 'categoria', // Asegúrate de que este campo es el correcto
-            select: 'name' // Solo selecciona el nombre de la categoría
-        });
+        const contadorCollection = ContadorArticulo.collection.name;
 
-        if (!articulo) {
+        const result = await Articulo.aggregate([
+            // Solo el artículo que buscamos
+            { $match: { _id: new mongoose.Types.ObjectId(idArticulo) } },
+
+            // Autor del artículo sin datos sensibles
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "author",
+                    pipeline: [
+                        { 
+                          $project: { 
+                            name: 1,
+                            surname: 1,
+                            image: 1,
+                            bio: 1,
+                            frasefavorita: 1,
+                            _id: 1
+                          } 
+                        }
+                    ]
+                }
+            },
+            { $unwind: "$author" },
+
+            // Categoría del artículo
+            {
+                $lookup: {
+                    from: "categorias",
+                    localField: "categoria",
+                    foreignField: "_id",
+                    as: "categoria",
+                    pipeline: [
+                        { $project: { name: 1 } }
+                    ]
+                }
+            },
+            { $unwind: "$categoria" },
+
+            // Vistas del contador
+            {
+                $lookup: {
+                    from: contadorCollection,
+                    localField: "_id",
+                    foreignField: "articuloId",
+                    as: "contador"
+                }
+            },
+
+            // Agregar campos calculados
+            {
+                $addFields: {
+                    vistas: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$contador.visto", 0] },
+                            0
+                        ]
+                    },
+                    Autor: "$author.name",
+                    ApellidoAutor: "$author.surname"
+                }
+            },
+
+            // Proyección final (solo lo que se enviará al frontend)
+            {
+                $project: {
+                    titulo: 1,
+                    contenido: 1,
+                    descripcion: 1,
+                    fecha: 1,
+                    coverImage: 1,
+                    categoria: 1,
+
+                    // campos calculados
+                    vistas: 1,
+                    Autor: 1,
+                    ApellidoAutor: 1,
+
+                    // para sidebar/author card
+                    author: 1
+                }
+            }
+        ]);
+
+        if (!result.length) {
             return res.status(404).json({
                 status: "error",
                 mensaje: "Artículo no encontrado"
             });
         }
 
-        // Buscar el contador de vistas asociado al artículo
-        const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
-
-        // Devolver el artículo con el contador de vistas (sin incrementar)
         return res.status(200).json({
             status: "success",
-            articulo: {
-                ...articulo.toObject(),
-                vistas: contador ? contador.visto : 0  // Agrega el contador de vistas
-            }
+            articulo: result[0]
         });
+
     } catch (error) {
         return res.status(500).json({
             status: "error",
@@ -495,6 +608,7 @@ export const leerArticulo = async (req, res) => {
         });
     }
 };
+
 
 
 //listar articulos mas vistos
