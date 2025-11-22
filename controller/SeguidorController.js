@@ -5,27 +5,53 @@ import Seguidores from "../models/seguidores.js"
 
 export const AgregarSeguido = async (req, res) => {
     try {
-        const userId = req.user.id; // Obtener el userId del usuario autenticado
-        const creadorId  = req.params.id;
+        const userId = req.user.id;
+        const creadorId = req.params.id;
 
-        // Verificar que el creadorId sea válido
-        if (!creadorId) {
-            return res.status(400).json({ message: "creadorId es requerido" });
+        // 1. Validar IDs
+        if (!mongoose.Types.ObjectId.isValid(creadorId)) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID de usuario inválido"
+            });
         }
 
-        // Crear un nuevo seguidor
-        const nuevoSeguidor = new Seguidores({
-            userId,
-            creadorId
+        // 2. Evitar que un usuario se siga a sí mismo
+        if (userId === creadorId) {
+            return res.status(400).json({
+                status: "error",
+                message: "No puedes seguirte a ti mismo"
+            });
+        }
+
+        // 3. Verificar si ya lo sigue
+        const existe = await Seguidores.findOne({ userId, creadorId });
+
+        if (existe) {
+            return res.status(200).json({
+                status: "success",
+                message: "Ya sigues a este usuario",
+                siguiendo: true
+            });
+        }
+
+        // 4. Crear nueva relación de seguimiento
+        const nuevoSeguidor = await Seguidores.create({ userId, creadorId });
+
+        return res.status(201).json({
+            status: "success",
+            message: "Ahora sigues a este usuario",
+            siguiendo: true,
+            seguidor: nuevoSeguidor
         });
 
-        // Guardar el seguidor en la base de datos
-        await nuevoSeguidor.save();
-
-        return res.status(201).json({ message: "Seguidor agregado con éxito", nuevoSeguidor });
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Error al agregar seguidor" });
+        console.error("AgregarSeguido Error:", error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error al agregar seguidor",
+            error: error.message
+        });
     }
 };
 
