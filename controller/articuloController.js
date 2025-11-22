@@ -705,51 +705,124 @@ export const listMisArticulos = async (req, res) => {
 export const listArticulosPorId = async (req, res) => {
     const userId = req.params.id;
 
-    let page = 1
-    if (req.params.page) {
-        page = req.params.page
-    }
-    page = parseInt(page)
-
-    let itemPerPage = 6
-
-    const opciones = {
-        page: page,
-        limit: itemPerPage,
-        sort: { fecha: -1 }
-
-    }
+    const page = req.params.page ? parseInt(req.params.page) : 1;
+    const limit = 6;
+    const skip = (page - 1) * limit;
 
     try {
+        const contadorCollection = ContadorArticulo.collection.name;
 
-        const articulos = await Articulo.paginate({ userId: userId }, opciones);
+        const articulos = await Articulo.aggregate([
+            // Filtrar solo artículos del usuario
+            { 
+                $match: { 
+                    userId: new mongoose.Types.ObjectId(userId) 
+                } 
+            },
 
-        if (!articulos) return res.status(404).json({
-            status: "error",
-            message: "no se han encontrado articulos"
-        })
+            // Orden
+            { $sort: { fecha: -1 } },
 
-        await Articulo.populate(articulos.docs, { path: 'userId categoria', select: '-email -password -__v -role' });
+            // Paginación
+            { $skip: skip },
+            { $limit: limit },
 
-        return res.status(200).send({
+            // Autor del artículo
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "author",
+                    pipeline: [
+                        { 
+                          $project: { 
+                            name: 1,
+                            surname: 1,
+                            image: 1,
+                            _id: 1
+                          } 
+                        }
+                    ]
+                }
+            },
+            { $unwind: "$author" },
+
+            // Categoría
+            {
+                $lookup: {
+                    from: "categorias",
+                    localField: "categoria",
+                    foreignField: "_id",
+                    as: "categoria",
+                    pipeline: [
+                        { $project: { name: 1 } }
+                    ]
+                }
+            },
+            { $unwind: { path: "$categoria", preserveNullAndEmptyArrays: true } },
+
+            // Contador de vistas
+            {
+                $lookup: {
+                    from: contadorCollection,
+                    localField: "_id",
+                    foreignField: "articuloId",
+                    as: "contador"
+                }
+            },
+
+            // Campos calculados
+            {
+                $addFields: {
+                    vistas: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$contador.visto", 0] },
+                            0
+                        ]
+                    },
+                    Autor: "$author.name",
+                    ApellidoAutor: "$author.surname"
+                }
+            },
+
+            // Proyección final
+            {
+                $project: {
+                    titulo: 1,
+                    descripcion: 1,
+                    fecha: 1,
+                    coverImage: 1,
+                    categoria: 1,
+
+                    vistas: 1,
+                    Autor: 1,
+                    ApellidoAutor: 1
+                }
+            }
+        ]);
+
+        // Total de artículos del usuario
+        const totalDocs = await Articulo.countDocuments({ userId });
+
+        return res.status(200).json({
             status: "success",
-            message: "articulos encontrados",
-            articulos: articulos.docs,
-            page: articulos.page,
-            totalDocs: articulos.totalDocs,
-            totalPages: articulos.totalPages,
-            itemPerPage: articulos.limit
-        })
+            articulos,
+            page,
+            totalDocs,
+            totalPages: Math.ceil(totalDocs / limit),
+            itemPerPage: limit
+        });
 
     } catch (error) {
         return res.status(500).json({
-            status: 'error',
-            message: 'Error al listar los articulos',
-            error: error.message,
+            status: "error",
+            message: "Error al listar los artículos",
+            error: error.message
         });
-
     }
-}
+};
+
 
 //generador de contador de cuantas veces es vistio un articulo
 export const incrementarVisualizaciones = async (req, res) => {
