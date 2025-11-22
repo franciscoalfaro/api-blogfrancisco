@@ -49,7 +49,7 @@ router.get("/misarticulos/:page?",checkAuth, ArticuloController.listMisArticulos
 
 
 
-//esto es para listar los articulos de un usuario buscado
+//esto es para listar los articulos de un usuario seleccionado
 router.get("/articulouser/:id/:page?", ArticuloController.listArticulosPorId)
 
 //contador de publicaciones es publico para saber cuantos usuarios visualizan la publicacion

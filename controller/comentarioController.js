@@ -48,13 +48,11 @@ export const removeComment = async (req, res) => {
         //obtener id de la publicacion
         const commentsId = req.params.id;
         const userId = req.user.id;
-
+        
 
         //buscar la publicacion comparando el id del usuario con el id de la publicacion y borrarlo
         //otra forma de buscar y elminar comentario
-        //const comentario = await Comentario.findByIdAndDelete({ _id: commentsId, user: userId });
-
-        const comentario = await Comentario.findByIdAndDelete({ "_id": commentsId })
+        const comentario = await Comentario.findByIdAndDelete({ _id: commentsId, user: userId });
 
         //si no existe el comentario se responde un 404
         if (!comentario) {

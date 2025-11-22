@@ -9,8 +9,11 @@ const router = express.Router()
 
 router.post("/megusta/:id",checkAuth,  LikeController.likePublication)
 router.post("/nolike/:id", checkAuth, LikeController.unlike)
+
+//elimina el like/nolike
 router.delete("/unlike/:id", checkAuth, LikeController.deleteLike)
 
+//devuelve el total de like/nolike de la publicacion
 router.get("/listlikes/:id",  LikeController.listLikes);
 
 
