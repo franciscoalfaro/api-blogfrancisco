@@ -61,8 +61,7 @@ export const AgregarSeguido = async (req, res) => {
 export const DejarSeguir = async (req, res) => {
     try {
         const userId = req.user.id; // Obtener el userId del usuario autenticado
-        const { creadorId } = req.params.id; // Obtener el creadorId del cuerpo de la solicitud
-
+        const creadorId  = req.params.id; // Obtener el creadorId del cuerpo de la solicitud
         // Verificar que el creadorId esté presente
         if (!creadorId) {
             return res.status(400).json({ message: "creadorId es requerido" });
