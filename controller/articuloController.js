@@ -499,9 +499,9 @@ export const listArticulos = async (req, res) => {
 export const leerArticulo = async (req, res) => {
     try {
         const idArticulo = req.params.id;
-
+        
         const contadorCollection = ContadorArticulo.collection.name;
-
+        
         const result = await Articulo.aggregate([
             // Solo el artículo que buscamos
             { $match: { _id: new mongoose.Types.ObjectId(idArticulo) } },
@@ -521,6 +521,7 @@ export const leerArticulo = async (req, res) => {
                             image: 1,
                             bio: 1,
                             frasefavorita: 1,
+                            nick:1,
                             _id: 1
                           } 
                         }
@@ -563,7 +564,8 @@ export const leerArticulo = async (req, res) => {
                         ]
                     },
                     Autor: "$author.name",
-                    ApellidoAutor: "$author.surname"
+                    ApellidoAutor: "$author.surname",
+                    
                 }
             },
 
@@ -581,6 +583,7 @@ export const leerArticulo = async (req, res) => {
                     vistas: 1,
                     Autor: 1,
                     ApellidoAutor: 1,
+                    
 
                     // para sidebar/author card
                     author: 1
