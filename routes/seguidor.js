@@ -11,7 +11,7 @@ router.post("/seguir/:id",checkAuth,  SeguidorController.AgregarSeguido)
 router.delete("/dejarseguir/:id", checkAuth, SeguidorController.DejarSeguir)
 router.get("/listar/", checkAuth, SeguidorController.ListarSeguidores)
 
-router.get("/listseguidores/:id",  SeguidorController.ListarSeguidores);
+router.get("/listseguidores/:id",  SeguidorController.ListarSeguidoresPorUsuario);
 
 
 // Exportar router

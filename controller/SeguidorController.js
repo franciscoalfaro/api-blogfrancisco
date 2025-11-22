@@ -2,12 +2,14 @@ import User from "../models/user.js"
 import fs from "fs"
 import path from "path"
 import Seguidores from "../models/seguidores.js"
+import mongoose from "mongoose";
 
 export const AgregarSeguido = async (req, res) => {
     try {
         const userId = req.user.id;
         const creadorId = req.params.id;
 
+        console.log(creadorId)
         // 1. Validar IDs
         if (!mongoose.Types.ObjectId.isValid(creadorId)) {
             return res.status(400).json({
@@ -119,6 +121,58 @@ export const ListarSeguidores = async (req, res) => {
 
     } catch (error) {
         console.error("ListarSeguidores ERROR:", error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error al listar seguidores",
+            error: error.message
+        });
+    }
+};
+
+
+export const ListarSeguidoresPorUsuario = async (req, res) => {
+    try {
+        const  userId  = req.params.id;
+
+        // Sanitizar paginación
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        // 1. Validar ID del usuario consultado
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID de usuario inválido"
+            });
+        }
+
+        // 2. Buscar seguidores de ese usuario
+        const seguidores = await Seguidores.paginate(
+            { creadorId: userId }, // Usuarios que siguen a :userId
+            {
+                page,
+                limit,
+                sort: { createdAt: -1 },
+                populate: {
+                    path: "userId", // El usuario que está siguiendo
+                    select: "name surname image nick bio frasefavorita"
+                }
+            }
+        );
+
+        return res.status(200).json({
+            status: "success",
+            message: "Seguidores obtenidos correctamente",
+            seguidores: seguidores.docs,
+            totalDocs: seguidores.totalDocs,
+            totalPages: seguidores.totalPages,
+            page: seguidores.page,
+            limit: seguidores.limit
+        });
+
+    } catch (error) {
+        console.error("ListarSeguidoresPorUsuario ERROR:", error);
+
         return res.status(500).json({
             status: "error",
             message: "Error al listar seguidores",
