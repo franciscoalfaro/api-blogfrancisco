@@ -127,64 +127,81 @@ export const login = async (req, res) => {
 //actualizar datos del usuario
 export const update = async (req, res) => {
     try {
-      // Recoger datos del usuario que se actualizará
-      const userIdentity = req.user;
-      let userToUpdate = req.body;
-  
-      // Eliminar campos sobrantes
-      delete userToUpdate.iat;
-      delete userToUpdate.exp;
-      delete userToUpdate.role;
-      delete userToUpdate.image;
-  
-      // Comprobar si el usuario ya existe
-      const users = await User.find({
-        $or: [{ email: userToUpdate.email.toLowerCase() }],
-      });
-  
-      if (!users) {
-        return res.status(500).send({ status: "error", message: "No existe el usuario a actualizar" });
-      }
-  
-      let userIsset = false;
-      users.forEach((user) => {
-        if (user && user._id != userIdentity.id) userIsset = true;
-      });
-  
-      if (userIsset) {
-        return res.status(200).send({
-          status: "warning",
-          message: "El usuario ya existe",
+        const userIdentity = req.user;
+        const data = req.body;
+
+        // Valores permitidos para actualizar (excepto password)
+        const allowedFields = [
+            "name",
+            "surname",
+            "nick",
+            "email",
+            "title",
+            "bio",
+            "frasefavorita"
+        ];
+
+        // Objeto final para actualizar
+        let userToUpdate = {};
+
+        // Guardar solo campos permitidos
+        allowedFields.forEach(field => {
+            if (data[field] !== undefined) {
+                userToUpdate[field] = data[field];
+            }
         });
-      }
-  
-      // Si hay contraseña, cifrarla
-      if (userToUpdate.password) {
-        let pwd = await bcrypt.hash(userToUpdate.password, 10);
-        userToUpdate.password = pwd;
-      } else {
-        delete userToUpdate.password;
-      }
-  
-      // Buscar el usuario y actualizarlo
-      const userUpdate = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true });
-  
-      if (!userUpdate) {
-        return res.status(400).json({ status: "error", message: "Error al actualizar" });
-      }
-  
-      return res.status(200).json({
-        status: "success",
-        message: "Perfil actualizado correctamente",
-        user: userUpdate, // Enviar el usuario actualizado
-      });
+
+        // Manejo especial de contraseña
+        let newPassword = data.newPassword || null;
+
+        if (newPassword) {
+            userToUpdate.password = await bcrypt.hash(newPassword, 10);
+        }
+
+        // Validar si el email ya existe (si viene en la petición)
+        if (userToUpdate.email) {
+            const emailExists = await User.findOne({
+                email: userToUpdate.email.toLowerCase(),
+                _id: { $ne: userIdentity.id }
+            });
+
+            if (emailExists) {
+                return res.status(200).json({
+                    status: "warning",
+                    message: "El correo ya está en uso por otro usuario"
+                });
+            }
+        }
+
+        // Actualizar el usuario
+        const userUpdated = await User.findByIdAndUpdate(
+            userIdentity.id,
+            userToUpdate,
+            { new: true }
+        );
+
+        if (!userUpdated) {
+            return res.status(400).json({
+                status: "error",
+                message: "No se pudo actualizar el usuario"
+            });
+        }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Perfil actualizado correctamente",
+            user: userUpdated
+        });
+
     } catch (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Error al obtener la información en el servidor",
-      });
+        console.error(error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error interno del servidor"
+        });
     }
-  };
+};
+
 
 // perfil
 export const profile = async (req, res) => {
@@ -216,7 +233,7 @@ export const avatar = (req, res) => {
 
     //obtener parametro de la url
     const file = req.params.file
-    
+
     //montar el path real de la image
     const filePath = "./uploads/avatars/" + file
 
@@ -243,7 +260,7 @@ export const avatar = (req, res) => {
 
 //subida de image
 export const upload = async (req, res) => {
-    
+
     //recoger el fichero de image
     if (!req.file) {
         return res.status(404).send({
@@ -392,9 +409,9 @@ export const publicListUser = async (req, res) => {
     try {
         const usuarios = await User.paginate({}, opciones);
 
-        if (!usuarios) return res.status(404).json({ 
-            status: "error", 
-            message: "no se han encontrado usuarios" 
+        if (!usuarios) return res.status(404).json({
+            status: "error",
+            message: "no se han encontrado usuarios"
         })
 
         return res.status(200).send({
@@ -425,7 +442,7 @@ export const publicProfile = async (req, res) => {
         const id = req.params.id;
 
         // Buscar el usuario por ID y excluir campos sensibles
-        const userProfile = await User.findById(id).select({ "password": 0, "role": 0});
+        const userProfile = await User.findById(id).select({ "password": 0, "role": 0 });
 
         if (!userProfile) {
             return res.status(404).json({ status: "error", message: "NO SE HA ENCONTRADO EL USUARIO" });
