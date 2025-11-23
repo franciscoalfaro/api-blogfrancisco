@@ -86,74 +86,21 @@ export const DejarSeguir = async (req, res) => {
 
 
 
-export const ListarSeguidores = async (req, res) => {
+export const MisSeguidores = async (req, res) => {
     try {
         const userId = req.user.id;
 
-        // Sanitizar valores de paginación
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
 
-        // Consulta paginada de seguidores
         const seguidores = await Seguidores.paginate(
-            { creadorId: userId },
+            { creadorId: userId }, // Ellos te siguen a ti
             {
                 page,
                 limit,
                 sort: { createdAt: -1 },
                 populate: {
-                    path: "userId",
-                    select: "name surname image nick frasefavorita bio" // solo lo necesario
-                }
-            }
-        );
-
-        return res.status(200).json({
-            status: "success",
-            message: "Seguidores obtenidos correctamente",
-            seguidores: seguidores.docs,
-            totalDocs: seguidores.totalDocs,
-            totalPages: seguidores.totalPages,
-            page: seguidores.page,
-            limit: seguidores.limit
-        });
-
-    } catch (error) {
-        console.error("ListarSeguidores ERROR:", error);
-        return res.status(500).json({
-            status: "error",
-            message: "Error al listar seguidores",
-            error: error.message
-        });
-    }
-};
-
-
-export const ListarSeguidoresPorUsuario = async (req, res) => {
-    try {
-        const  userId  = req.params.id;
-
-        // Sanitizar paginación
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-
-        // 1. Validar ID del usuario consultado
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({
-                status: "error",
-                message: "ID de usuario inválido"
-            });
-        }
-
-        // 2. Buscar seguidores de ese usuario
-        const seguidores = await Seguidores.paginate(
-            { creadorId: userId }, // Usuarios que siguen a :userId
-            {
-                page,
-                limit,
-                sort: { createdAt: -1 },
-                populate: {
-                    path: "userId", // El usuario que está siguiendo
+                    path: "userId", // El seguidor
                     select: "name surname image nick bio frasefavorita"
                 }
             }
@@ -161,7 +108,7 @@ export const ListarSeguidoresPorUsuario = async (req, res) => {
 
         return res.status(200).json({
             status: "success",
-            message: "Seguidores obtenidos correctamente",
+            message: "Mis seguidores obtenidos correctamente",
             seguidores: seguidores.docs,
             totalDocs: seguidores.totalDocs,
             totalPages: seguidores.totalPages,
@@ -170,12 +117,100 @@ export const ListarSeguidoresPorUsuario = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("ListarSeguidoresPorUsuario ERROR:", error);
-
         return res.status(500).json({
             status: "error",
-            message: "Error al listar seguidores",
-            error: error.message
+            message: "Error al obtener seguidores"
+        });
+    }
+};
+
+export const SeguidoresDeUsuario = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Validar ID
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID inválido"
+            });
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const seguidores = await Seguidores.paginate(
+            { creadorId: userId }, // Ellos siguen al usuario X
+            {
+                page,
+                limit,
+                sort: { createdAt: -1 },
+                populate: {
+                    path: "userId",
+                    select: "name surname image nick bio frasefavorita"
+                }
+            }
+        );
+
+        return res.status(200).json({
+            status: "success",
+            message: "Seguidores de usuario obtenidos",
+            seguidores: seguidores.docs,
+            totalDocs: seguidores.totalDocs,
+            totalPages: seguidores.totalPages,
+            page: seguidores.page,
+            limit: seguidores.limit
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "Error al listar seguidores"
+        });
+    }
+};
+
+export const SeguidosDeUsuario = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                status: "error",
+                message: "ID inválido"
+            });
+        }
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const seguidos = await Seguidores.paginate(
+            { userId: userId }, // El usuario X sigue a otros
+            {
+                page,
+                limit,
+                sort: { createdAt: -1 },
+                populate: {
+                    path: "creadorId", // El creador que es seguido
+                    select: "name surname image nick bio frasefavorita"
+                }
+            }
+        );
+
+        return res.status(200).json({
+            status: "success",
+            message: "Seguidos obtenidos correctamente",
+            seguidos: seguidos.docs,
+            totalDocs: seguidos.totalDocs,
+            totalPages: seguidos.totalPages,
+            page: seguidos.page,
+            limit: seguidos.limit
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "Error al listar seguidos"
         });
     }
 };

@@ -9,9 +9,10 @@ const router = express.Router()
 
 router.post("/seguir/:id",checkAuth,  SeguidorController.AgregarSeguido)
 router.delete("/dejarseguir/:id", checkAuth, SeguidorController.DejarSeguir)
-router.get("/listar/", checkAuth, SeguidorController.ListarSeguidores)
+router.get("/miseguidores/", checkAuth, SeguidorController.MisSeguidores)
+router.get("/seguidores/:id",  SeguidorController.SeguidoresDeUsuario);
+router.get("/quiensigue/:id",  SeguidorController.SeguidosDeUsuario);
 
-router.get("/listseguidores/:id",  SeguidorController.ListarSeguidoresPorUsuario);
 
 
 // Exportar router
