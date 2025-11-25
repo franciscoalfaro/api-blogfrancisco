@@ -16,6 +16,7 @@ import mongoose from "mongoose";
 //end-point para crear articulos
 export const crearArticulo = async (req, res) => {
     const params = req.body;
+    console.log(params)
     if (!params.titulo || !params.descripcion || !params.contenido || !params.categoria) {
         return res.status(400).json({
             status: "Error",
@@ -128,12 +129,11 @@ export const eliminarArticulo = async (req, res) => {
 export const actualizarArticulo = async (req, res) => {
     try {
         const userId = req.user.id;
-        const idArticulo = req.params.id;  // Asumiendo que el id se encuentra en los parámetros
+        const idArticulo = req.params.id;
         const articuloActualizado = req.body;
 
-        // Verificar si el artículo existe
+        // Buscar artículo
         const articuloExistente = await Articulo.findById(idArticulo);
-
         if (!articuloExistente) {
             return res.status(404).json({
                 status: 'error',
@@ -141,7 +141,7 @@ export const actualizarArticulo = async (req, res) => {
             });
         }
 
-        // Verificar si el usuario logueado es el creador del artículo
+        // Validar propietario
         if (articuloExistente.userId.toString() !== userId) {
             return res.status(403).json({
                 status: 'error',
@@ -149,17 +149,40 @@ export const actualizarArticulo = async (req, res) => {
             });
         }
 
-        // Actualizar el artículo con los datos proporcionados
-        await Articulo.findByIdAndUpdate(idArticulo, articuloActualizado, { new: true });
+        // -------------------------------------------------------
+        // 🔍 VALIDACIÓN DE CATEGORÍA POR NOMBRE (si viene en el body)
+        // -------------------------------------------------------
+        if (articuloActualizado.categoria) {
+            const categoriaDB = await Categoria.findOne({ name: articuloActualizado.categoria });
+
+            if (!categoriaDB) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'La categoría no existe'
+                });
+            }
+
+            // reemplazar texto por id real
+            articuloActualizado.categoria = categoriaDB._id;
+        }
+
+        // -------------------------------------------------------
+
+        // Actualizar artículo
+        const articuloModificado = await Articulo.findByIdAndUpdate(
+            idArticulo,
+            articuloActualizado,
+            { new: true, runValidators: true }
+        );
 
         return res.status(200).json({
             status: 'success',
             message: 'Articulo actualizado correctamente',
-            articuloExistente,
-            articuloActualizado
+            articulo: articuloModificado
         });
 
     } catch (error) {
+        console.error(error);
         return res.status(500).json({
             status: 'error',
             message: 'Error al actualizar el artículo',
@@ -167,6 +190,7 @@ export const actualizarArticulo = async (req, res) => {
         });
     }
 };
+
 
 //end-point para subir 1 imagen que sera la portada del articulo
 export const upload = async (req, res) => {
