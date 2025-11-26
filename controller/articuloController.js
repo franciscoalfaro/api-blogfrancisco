@@ -56,8 +56,7 @@ export const crearArticulo = async (req, res) => {
 
         await newArticulo.save();
         const seguidores = await Seguidor.find({ creadorId: userId }).populate('userId');
-
-
+        
         // Enviar correo informativo a cada seguidor
         for (let seguidor of seguidores) {
             const { name, email } = seguidor.userId;

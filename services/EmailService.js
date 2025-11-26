@@ -93,16 +93,20 @@ async function enviarCorreoContacto(email, apellido, telefono, mensaje, nombre) 
 async function enviarCorreoInformativo(name, email, newArticulo, isLoggedIn) {
     const transporter = crearTransporter();
     const emailUser = process.env.EMAIL_USER;
+    
+    console.log('datos recibidos desde el controlador:', name, email, isLoggedIn)
+    console.log('articulo', newArticulo)
 
     try {
         // Ruta al archivo HTML
         const emailTemplatePath = path.join('uploads', 'html', 'informativo.html');
         const emailTemplate = await fs.readFile(emailTemplatePath, 'utf8'); // Lectura asincrónica
 
+
         // Determinar la URL en función del estado de login
         const sitioWeb = isLoggedIn
-            ? `http://localhost:5173/auth/publicacion/${newArticulo._id}` // URL privada
-            : `http://localhost:5173/publicacion/${newArticulo._id}`; // URL pública
+            ? `${process.env.FRONTEND_URL}/auth/publicacion/${newArticulo._id}` // URL privada
+            : `${process.env.FRONTEND_URL}/publicacion/${newArticulo._id}`; // URL pública
 
         // Reemplazar las variables en el template con los datos reales
         const htmlContent = emailTemplate

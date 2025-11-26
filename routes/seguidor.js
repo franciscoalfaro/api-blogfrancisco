@@ -14,6 +14,5 @@ router.get("/seguidores/:id",  SeguidorController.SeguidoresDeUsuario);
 router.get("/quiensigue/:id",  SeguidorController.SeguidosDeUsuario);
 
 
-
 // Exportar router
 export default router;
