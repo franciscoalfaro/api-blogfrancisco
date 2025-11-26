@@ -104,6 +104,7 @@ async function enviarCorreoInformativo(name, email, newArticulo) {
         const sitioWeb = `${process.env.FRONTEND_URL}/article/${newArticulo._id}`;
 
         const htmlContent = emailTemplate
+            .replace(/{{name}}/g, name)
             .replace(/{{titulo}}/g, newArticulo.titulo)
             .replace(/{{autor}}/g, newArticulo.Autor)
             .replace(/{{descripcion}}/g, newArticulo.descripcion)
