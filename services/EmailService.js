@@ -90,40 +90,35 @@ async function enviarCorreoContacto(email, apellido, telefono, mensaje, nombre) 
 }
 
 // Función para enviar correo informativo sobre una nueva publicación
-async function enviarCorreoInformativo(name, email, newArticulo, isLoggedIn) {
+async function enviarCorreoInformativo(name, email, newArticulo) {
     const transporter = crearTransporter();
     const emailUser = process.env.EMAIL_USER;
     
-    console.log('datos recibidos desde el controlador:', name, email, isLoggedIn)
+    console.log('datos recibidos desde el controlador:', name, email)
     console.log('articulo', newArticulo)
 
     try {
-        // Ruta al archivo HTML
         const emailTemplatePath = path.join('uploads', 'html', 'informativo.html');
-        const emailTemplate = await fs.readFile(emailTemplatePath, 'utf8'); // Lectura asincrónica
+        const emailTemplate = await fs.readFile(emailTemplatePath, 'utf8');
 
+        const sitioWeb = `${process.env.FRONTEND_URL}/article/${newArticulo._id}`;
 
-        // Determinar la URL en función del estado de login
-        const sitioWeb = isLoggedIn
-            ? `${process.env.FRONTEND_URL}/auth/publicacion/${newArticulo._id}` // URL privada
-            : `${process.env.FRONTEND_URL}/publicacion/${newArticulo._id}`; // URL pública
-
-        // Reemplazar las variables en el template con los datos reales
         const htmlContent = emailTemplate
-            .replace('{{titulo}}', newArticulo.titulo)
-            .replace('{{autor}}', newArticulo.Autor)
-            .replace('{{descripcion}}', newArticulo.descripcion)
-            .replace('{{sitio_web}}', sitioWeb);
+            .replace(/{{titulo}}/g, newArticulo.titulo)
+            .replace(/{{autor}}/g, newArticulo.Autor)
+            .replace(/{{descripcion}}/g, newArticulo.descripcion)
+            .replace(/{{sitio_web}}/g, sitioWeb);
 
         const mailOptions = {
             from: emailUser,
             to: email,
             subject: `Hola ${name}, nuevo artículo publicado: ${newArticulo.titulo}`,
-            html: htmlContent  // Usar el contenido HTML procesado
+            html: htmlContent
         };
 
         await transporter.sendMail(mailOptions);
         console.log('Correo informativo enviado a', email);
+
     } catch (error) {
         console.error('Error al enviar correo informativo:', error);
     }
