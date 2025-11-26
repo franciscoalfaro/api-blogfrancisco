@@ -1,77 +1,139 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuevo Artículo Publicado</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
-            padding-bottom: 20px;
-        }
-        .header h1 {
-            color: #333;
-            font-size: 24px;
-        }
-        .article-info {
-            font-size: 16px;
-            color: #555;
-            line-height: 1.5;
-        }
-        .article-info p {
-            margin: 10px 0;
-        }
-        .article-info strong {
-            color: #333;
-        }
-        .footer {
-            text-align: center;
-            padding-top: 20px;
-            font-size: 14px;
-            color: #888;
-        }
-        .footer a {
-            color: #4caf50;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevo artículo publicado</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 620px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      padding: 32px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 30px 25px;
+      color: #374151;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .content strong {
+      color: #111827;
+      font-weight: 600;
+    }
+
+    .content-highlight {
+      background: #f9fafb;
+      border-left: 4px solid #4f46e5;
+      padding: 12px 16px;
+      margin: 20px 0;
+      border-radius: 6px;
+    }
+
+    .button {
+      display: inline-block;
+      margin: 30px 0 10px 0;
+      padding: 14px 24px;
+      background: #10b981;
+      color: white !important;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .button:hover {
+      background: #0ea673;
+    }
+
+    .footer {
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+      background: #f9fafb;
+    }
+
+    .author-box {
+      margin-top: 25px;
+      padding: 18px;
+      background: #eef2ff;
+      border-radius: 10px;
+      text-align: center;
+      color: #4338ca;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>¡Nuevo artículo disponible!</h1>
-        </div>
+  <div class="container">
 
-        <div class="article-info">
-            <p><strong>Título del artículo:</strong> {{titulo}}</p>
-            <p><strong>Autor:</strong> {{autor}}</p>
-            <p><strong>Descripción:</strong> {{descripcion}}</p>
-        </div>
-
-        <div class="footer">
-            <p><strong>Autor:</strong> {{autor}}</p>
-            <p>Gracias por seguir a {{autor}}. Para más actualizaciones, visita nuestro sitio web.</p>
-            <p><a href="{{sitio_web}}">Ir al artículo completo</a></p>
-        </div>
+    <!-- Header -->
+    <div class="header">
+      <h1>¡Nuevo artículo disponible!</h1>
     </div>
+
+    <!-- Content -->
+    <div class="content">
+      
+      <p>Hola <strong>{{autor}}</strong>,</p>
+      <p>Tenemos una nueva actualización en el blog que podría interesarte.</p>
+
+      <div class="content-highlight">
+        <p><strong>Título:</strong> {{titulo}}</p>
+        <p><strong>Descripción:</strong> {{descripcion}}</p>
+      </div>
+
+      <p>
+        El autor <strong>{{autor}}</strong> ha publicado un nuevo artículo.  
+        Puedes leerlo completo haciendo clic en el siguiente botón:
+      </p>
+
+      <center>
+        <a href="{{sitio_web}}" class="button">Leer artículo completo</a>
+      </center>
+
+      <div class="author-box">
+        Publicado por {{autor}}  
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      Gracias por seguir las publicaciones de {{autor}}.  
+      Te enviaremos novedades cuando haya contenido nuevo.
+    </div>
+
+  </div>
 </body>
 </html>
