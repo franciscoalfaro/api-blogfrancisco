@@ -130,6 +130,7 @@ export const actualizarArticulo = async (req, res) => {
         const userId = req.user.id;
         const idArticulo = req.params.id;
         const articuloActualizado = req.body;
+        console.log(articuloActualizado)
 
         // Buscar artículo
         const articuloExistente = await Articulo.findById(idArticulo);
@@ -152,7 +153,7 @@ export const actualizarArticulo = async (req, res) => {
         // 🔍 VALIDACIÓN DE CATEGORÍA POR NOMBRE (si viene en el body)
         // -------------------------------------------------------
         if (articuloActualizado.categoria) {
-            const categoriaDB = await Categoria.findOne({ name: articuloActualizado.categoria });
+            const categoriaDB = await Categoria.findOne({ id: articuloActualizado.id });
 
             if (!categoriaDB) {
                 return res.status(400).json({
@@ -356,58 +357,73 @@ export const media = (req, res) => {
 };
 
 
-//end-point para buscar articulos
+// Endpoint: Buscar artículos
 export const buscador = async (req, res) => {
     try {
-        let busqueda = req.params.articulo;
-        busqueda = busqueda.replace(/\+/g, ' ');
+        // Sanitización básica
+        let busqueda = req.params.articulo?.trim() || "";
 
-        let page = 1;
-        if (req.params.page) {
-            page = req.params.page;
+        if (busqueda.length < 2) {
+            return res.status(400).json({
+                status: "error",
+                message: "La búsqueda debe contener al menos 2 caracteres."
+            });
         }
-        page = parseInt(page);
 
+        // Reemplazar "+" por espacios
+        busqueda = busqueda.replace(/\+/g, " ");
+
+        // Evitar regex peligrosas
+        const safeRegex = busqueda.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        // Paginación
+        let page = parseInt(req.params.page) || 1;
         let itemPerPage = 4;
 
         const options = {
             page,
             limit: itemPerPage,
             sort: { fecha: -1 },
-            select: '-password', // Selecciona los campos que necesitas
-            populate: [] // Populación adicional si es necesario
+            select: "-password",
+            populate: [],
+            lean: true, // 🔥 Responde más ligero, sin doc instances de Mongoose
         };
 
-        // Realiza la búsqueda de artículos con expresiones regulares insensibles a mayúsculas y minúsculas
-        const resultados = await Articulo.paginate({
+        // Query de búsqueda
+        const query = {
             $or: [
-                { "titulo": { $regex: busqueda, $options: "i" } },
-                { "descripcion": { $regex: busqueda, $options: "i" } },
-                { "contenido": { $regex: busqueda, $options: "i" } },
-                { "Autor": { $regex: busqueda, $options: "i" } },
-            ]
-        }, options);
+                { titulo:      { $regex: safeRegex, $options: "i" } },
+                { descripcion: { $regex: safeRegex, $options: "i" } },
+                { contenido:   { $regex: safeRegex, $options: "i" } },
+                { Autor:       { $regex: safeRegex, $options: "i" } },
+            ],
+        };
 
+        const resultados = await Articulo.paginate(query, options);
+
+        // Si no hay artículos
         if (!resultados.docs.length) {
             return res.status(404).json({
                 status: "error",
-                message: "No se encontraron artículos para la búsqueda"
+                message: "No se encontraron artículos relacionados con tu búsqueda."
             });
         }
 
-        // Para cada artículo encontrado, obtener su contador de visualizaciones
-        const articulosConContador = await Promise.all(resultados.docs.map(async articulo => {
-            const contador = await ContadorArticulo.findOne({ articuloId: articulo._id });
-            return {
-                ...articulo.toObject(), // Convierte el artículo en objeto plano
-                vistas: contador ? contador.visto : 0 // Agrega el contador de vistas si existe
-            };
-        }));
+        // Agregar contador de vistas a cada artículo
+        const articulosFinal = await Promise.all(
+            resultados.docs.map(async (art) => {
+                const contador = await ContadorArticulo.findOne({ articuloId: art._id }).lean();
+                return {
+                    ...art,
+                    vistas: contador?.visto || 0,
+                };
+            })
+        );
 
         return res.status(200).json({
             status: "success",
             message: "Búsqueda completada",
-            resultados: articulosConContador,
+            resultados: articulosFinal,
             page: resultados.page,
             totalDocs: resultados.totalDocs,
             totalPages: resultados.totalPages,
@@ -422,6 +438,7 @@ export const buscador = async (req, res) => {
         });
     }
 };
+
 
 
 //end-point para listar todos los articulos
