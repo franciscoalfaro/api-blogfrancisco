@@ -9,94 +9,86 @@
     body {
       margin: 0;
       padding: 0;
-      background-color: #ffffff;
-      font-family: Arial, Helvetica, sans-serif;
-      color: #222222;
+      background: #f3f4f6;
+      font-family: Arial, sans-serif;
     }
 
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 620px;
       margin: 40px auto;
       background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 
     .header {
-      padding: 25px 20px;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      padding: 32px 20px;
       text-align: center;
-      border-bottom: 1px solid #e5e7eb;
+      color: white;
     }
 
     .header h1 {
+      font-size: 26px;
       margin: 0;
-      font-size: 24px;
-      color: #0073e6;
       font-weight: 700;
     }
 
     .content {
       padding: 30px 25px;
+      color: #374151;
       font-size: 16px;
       line-height: 1.6;
     }
 
-    .content p {
-      margin-bottom: 16px;
+    .content strong {
+      color: #111827;
+      font-weight: 600;
     }
 
-    .highlight-box {
+    .content-highlight {
       background: #f9fafb;
-      border-left: 4px solid #0073e6;
-      padding: 16px;
+      border-left: 4px solid #4f46e5;
+      padding: 12px 16px;
       margin: 20px 0;
       border-radius: 6px;
     }
 
-    .highlight-box strong {
-      color: #111827;
-    }
-
     .button {
       display: inline-block;
-      margin: 25px 0 10px 0;
+      margin: 30px 0 10px 0;
       padding: 14px 24px;
-      background-color: #0073e6;
-      color: #ffffff !important;
+      background: #10b981;
+      color: white !important;
       text-decoration: none;
       font-weight: bold;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 16px;
     }
 
     .button:hover {
-      background-color: #005bb5;
-    }
-
-    .author-box {
-      margin-top: 30px;
-      padding: 16px;
-      background: #f3f4f6;
-      border-radius: 6px;
-      text-align: center;
-      font-size: 14px;
-      color: #555555;
+      background: #0ea673;
     }
 
     .footer {
       padding: 20px;
       text-align: center;
-      font-size: 13px;
+      font-size: 14px;
       color: #6b7280;
-      border-top: 1px solid #e5e7eb;
+      background: #f9fafb;
     }
 
-    .brand {
+    .author-box {
+      margin-top: 25px;
+      padding: 18px;
+      background: #eef2ff;
+      border-radius: 10px;
+      text-align: center;
+      color: #4338ca;
       font-weight: bold;
-      color: #0073e6;
+      font-size: 15px;
     }
 
   </style>
@@ -107,28 +99,29 @@
 
     <!-- Header -->
     <div class="header">
-      <h1>Blog de Francisco Alfaro</h1>
+      <h1>¡Nuevo artículo disponible!</h1>
     </div>
 
     <!-- Content -->
     <div class="content">
       
+      <!-- Corrección aquí -->
       <p>Hola <strong>{{name}}</strong>,</p>
 
-      <p>Se ha publicado un nuevo artículo en el blog que podría interesarte.</p>
+      <p>Tenemos una nueva actualización en el blog que podría interesarte.</p>
 
-      <div class="highlight-box">
+      <div class="content-highlight">
         <p><strong>Título:</strong> {{titulo}}</p>
         <p><strong>Descripción:</strong> {{descripcion}}</p>
       </div>
 
       <p>
-        El autor <strong>{{autor}}</strong> ha compartido este contenido recientemente.
-        Puedes revisarlo completo desde el siguiente enlace:
+        El autor <strong>{{autor}}</strong> ha publicado un nuevo artículo.  
+        Puedes leerlo completo haciendo clic en el siguiente botón:
       </p>
 
       <center>
-        <a href="{{sitio_web}}" class="button">Leer artículo</a>
+        <a href="{{sitio_web}}" class="button">Leer artículo completo</a>
       </center>
 
       <div class="author-box">
@@ -139,8 +132,8 @@
 
     <!-- Footer -->
     <div class="footer">
-      Recibes este correo porque estás suscrito al <span class="brand">Blog de Francisco Alfaro</span>. <br>
-      Te notificaremos cuando haya nuevas publicaciones.
+      Gracias por seguir las publicaciones de {{autor}}.  
+      Te enviaremos novedades cuando haya contenido nuevo.
     </div>
 
   </div>

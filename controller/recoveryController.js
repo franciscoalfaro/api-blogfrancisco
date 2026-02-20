@@ -1,7 +1,7 @@
 import 'dotenv'
-import bcrypt  from 'bcrypt'
-import User  from '../models/user.js'
-import enviar  from "../services/EmailService.js"
+import bcrypt from 'bcrypt'
+import User from '../models/user.js'
+import enviar from "../services/EmailService.js"
 import nuevaclave from "../services/generatepassword.js"
 
 export const recuperarContrasena = async (req, res) => {
@@ -30,7 +30,7 @@ export const recuperarContrasena = async (req, res) => {
 
         return res.status(200).json({
             status: 'success',
-            message: 'Se ha enviado una nueva contraseña al correo electrónico registrado'
+            message: 'Si el correo electrónico está registrado, recibirás un mensaje con una clave provisoria para acceder a tu cuenta.'
         });
     } catch (error) {
         return res.status(500).json({
