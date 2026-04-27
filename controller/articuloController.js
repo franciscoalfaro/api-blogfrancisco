@@ -11,6 +11,8 @@ import sanitizerService from '../services/sanitizarContenido.js';
 import InformacionService from '../services/EmailService.js';
 import mongoose from "mongoose";
 
+const UPLOAD_DIR = "./uploads/publications";
+
 
 
 //end-point para crear articulos
@@ -39,8 +41,7 @@ export const crearArticulo = async (req, res) => {
             categoriaExistente = await Categoria.create({ userId, name: params.categoria });
         }
 
-        const contenidoSanitizado = await sanitizerService.sanitizarContenido(params.contenido);
-
+const contenidoSanitizado = await sanitizerService.sanitizarContenido(params.contenido);
 
         const newArticulo = await Articulo.create({
             userId: userId,
@@ -104,6 +105,24 @@ export const eliminarArticulo = async (req, res) => {
                 status: 'error',
                 message: 'No tiene permisos para eliminar este artículo'
             });
+        }
+
+        // Borrar imagen de portada si existe y no es la default
+        if (articuloEliminar.coverImage && articuloEliminar.coverImage !== 'default.png') {
+            const coverPath = path.join(UPLOAD_DIR, articuloEliminar.coverImage);
+            if (fs.existsSync(coverPath)) {
+                fs.unlinkSync(coverPath);
+            }
+        }
+
+        // Borrar imágenes del contenido
+        if (articuloEliminar.imagenes && articuloEliminar.imagenes.length > 0) {
+            for (const img of articuloEliminar.imagenes) {
+                const imgPath = path.join(UPLOAD_DIR, img.filename);
+                if (fs.existsSync(imgPath)) {
+                    fs.unlinkSync(imgPath);
+                }
+            }
         }
 
         await Articulo.findByIdAndDelete(articuloId);
@@ -194,13 +213,9 @@ export const actualizarArticulo = async (req, res) => {
 
 //end-point para subir 1 imagen que sera la portada del articulo
 export const upload = async (req, res) => {
-    // Sacar el ID del artículo
     const articuloId = req.params.id;
-
-    // Recoger el archivo de imagen
     const file = req.file;
-  
-    // Verificar si se proporcionó la imagen
+
     if (!file) {
         return res.status(404).send({
             status: "error",
@@ -209,16 +224,43 @@ export const upload = async (req, res) => {
     }
 
     try {
-        // Conseguir el nombre del archivo
-        const image = file.originalname;
+        // Si el archivo ya fue procesado por el middleware (nuevo flujo con Sharp)
+        if (req.processedFile) {
+            // Buscar artículo anterior para borrar imagen old
+            const oldArticulo = await Articulo.findById(articuloId);
+            if (oldArticulo && oldArticulo.coverImage && oldArticulo.coverImage !== 'default.png') {
+                const oldPath = path.join(UPLOAD_DIR, oldArticulo.coverImage);
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath);
+                }
+            }
 
-        // Obtener extensión del archivo
+            const articulo = await Articulo.findOneAndUpdate(
+                { _id: articuloId, userId: req.user.id },
+                { coverImage: req.processedFile.filename },
+                { new: true }
+            );
+
+            if (!articulo) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Artículo no encontrado"
+                });
+            }
+
+            return res.status(200).json({
+                status: "success",
+                message: "Imagen de portada subida correctamente",
+                articulo: articulo
+            });
+        }
+
+        // Old flow (sin middleware) - mantener compatibilidad
+        const image = file.originalname;
         const imageSplit = image.split(".");
         const extension = imageSplit[imageSplit.length - 1].toLowerCase();
 
-        // Comprobar extensión
         if (extension !== "png" && extension !== "jpg" && extension !== "jpeg" && extension !== "gif") {
-            // Borrar archivo si la extensión no es válida
             const filePath = file.path;
             fs.unlinkSync(filePath);
 
@@ -228,10 +270,9 @@ export const upload = async (req, res) => {
             });
         }
 
-        // Actualizar el artículo con la imagen de portada
         const articulo = await Articulo.findOneAndUpdate(
             { _id: articuloId, userId: req.user.id },
-            { coverImage: req.file.filename},  // Guardar la ruta de la imagen de portada
+            { coverImage: req.file.filename},
             { new: true }
         );
 
@@ -242,14 +283,46 @@ export const upload = async (req, res) => {
             });
         }
 
-        // Responder con éxito y la información del artículo actualizado
         return res.status(200).json({
             status: "success",
             message: "Imagen de portada subida correctamente",
             articulo: articulo
         });
     } catch (error) {
-        // Manejo de errores
+        console.error(error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error interno del servidor"
+        });
+    }
+};
+
+// Controlador para subir imagenes del contenido (TinyMCE)
+export const uploadContentImage = async (req, res) => {
+    const file = req.file;
+
+    if (!file) {
+        return res.status(400).json({
+            status: "error",
+            message: "Imagen no seleccionada"
+        });
+    }
+
+    if (!req.processedFile) {
+        return res.status(500).json({
+            status: "error",
+            message: "Error al procesar la imagen"
+        });
+    }
+
+    try {
+        return res.status(200).json({
+            status: "success",
+            message: "Imagen subida correctamente",
+            url: req.processedFile.url,
+            filename: req.processedFile.filename
+        });
+    } catch (error) {
         console.error(error);
         return res.status(500).json({
             status: "error",
@@ -333,6 +406,16 @@ export const media = (req, res) => {
     const file = req.params.file;
     const filePath = "./uploads/publications/" + file;
 
+    const ext = file.split('.').pop()?.toLowerCase();
+    const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
     try {
         fs.stat(filePath, (error, exist) => {
             if (!exist) {
@@ -342,10 +425,9 @@ export const media = (req, res) => {
                 });
             }
 
-            // Configurar las cabeceras de caché
-            res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
 
-            // Devolver el archivo si existe
             return res.sendFile(path.resolve(filePath));
         });
     } catch (error) {

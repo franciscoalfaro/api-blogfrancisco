@@ -1,7 +1,8 @@
 import express from "express";
 import multer from "multer";
 import * as ArticuloController from "../controller/articuloController.js";
-import { auth as checkAuth } from "../middlewares/auth.js";;
+import { auth as checkAuth } from "../middlewares/auth.js";
+import { imageUpload, processAndSaveImage, processAndSaveCover } from "../middlewares/imageMiddleware.js";
 
 
 const router = express.Router()
@@ -28,13 +29,14 @@ router.delete("/delete/:id",checkAuth, ArticuloController.eliminarArticulo)
 router.put("/update/:id",checkAuth, ArticuloController.actualizarArticulo)
 
 
-//imagen portada 
-router.post("/upload/:id",[checkAuth, uploads.single("file0")], ArticuloController.upload)
+//imagen portada - nueva versión con compresión
+router.post("/upload/:id",[checkAuth, imageUpload.single("file0"), processAndSaveCover], ArticuloController.upload)
+
+
+//imagen de contenido (TinyMCE) - nueva ruta
+router.post("/upload-content-image", checkAuth, imageUpload.single("file0"), processAndSaveImage, ArticuloController.uploadContentImage)
 
 router.get("/media/:file", ArticuloController.media)
-
-//imagen
-router.delete("/deleteimagen/:id", checkAuth,ArticuloController.eliminarImagen)
 
 //buscar articulos
 router.get("/search/:articulo/:page?", ArticuloController.buscador);
