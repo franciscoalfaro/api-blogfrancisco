@@ -39,7 +39,7 @@ const ArticuloSchema = Schema({
     },
 coverImage: {
         type: String,
-        default: "default.png"
+        default: "default.webp"
     },
     imagenes: [{
         url: String,
