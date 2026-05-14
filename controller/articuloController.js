@@ -531,7 +531,6 @@ export const listArticulos = async (req, res) => {
 
     try {
         const contadorCollection = ContadorArticulo.collection.name; 
-        console.log("Colección contador:", contadorCollection);
 
         const result = await Articulo.aggregate([
             { $sort: { fecha: -1 } },
