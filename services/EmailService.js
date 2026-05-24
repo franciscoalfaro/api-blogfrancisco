@@ -18,28 +18,30 @@ function crearTransporter() {
     });
 }
 
-// Función para enviar correo de recuperación utilizando servidor SMTP
-async function enviarCorreoRecuperacion(email, nuevaContrasena) {
+// Función para enviar correo de recuperación con enlace (token)
+async function enviarEnlaceRecuperacion(email, resetURL) {
     const transporter = crearTransporter();
     const emailUser = process.env.EMAIL_USER;
 
     try {
         const emailTemplatePath = path.join('uploads', 'html', 'reset-password.html');
-        const emailTemplate = await fs.readFile(emailTemplatePath, 'utf8'); // Lectura asincrónica
+        const emailTemplate = await fs.readFile(emailTemplatePath, 'utf8');
 
         const mailOptions = {
             from: emailUser,
             to: email,
             subject: 'Recuperación de Contraseña',
-            html: emailTemplate.replace('${nuevaContrasena}', nuevaContrasena)
+            html: emailTemplate.replace('{{resetURL}}', resetURL)
         };
 
         await transporter.sendMail(mailOptions);
-        console.log('Correo de recuperación enviado a', email);
+        console.log('Correo de recuperación con enlace enviado a', email);
     } catch (error) {
-        console.error('Error al enviar correo de recuperación:', error);
+        console.error('Error al enviar correo de recuperación con enlace:', error);
     }
 }
+
+
 
 // Función para enviar correo de bienvenida con nueva clave de administrador
 async function enviarCorreoBienvenida(email, nuevaContrasena) {
@@ -126,4 +128,4 @@ async function enviarCorreoInformativo(name, email, newArticulo) {
 }
 
 
-export default { enviarCorreoRecuperacion, enviarCorreoBienvenida, enviarCorreoContacto, enviarCorreoInformativo};
+export default { enviarEnlaceRecuperacion, enviarCorreoBienvenida, enviarCorreoContacto, enviarCorreoInformativo};

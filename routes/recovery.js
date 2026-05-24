@@ -3,7 +3,7 @@ import * as RecoveryController from "../controller/recoveryController.js";
 
 const router = express.Router()
 
-router.post("/newpass", RecoveryController.recuperarContrasena)
+router.post("/request-reset", RecoveryController.requestPasswordReset)
+router.post("/reset-password/:token", RecoveryController.handleResetPassword)
 
-// Exportar router
 export default router;
