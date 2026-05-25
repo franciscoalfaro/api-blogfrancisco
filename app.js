@@ -19,7 +19,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://blogs.franciscoalfaro.cl',
+    origin: process.env.FRONTEND_URL || 'https://blog.franciscoalfaro.cl',
     credentials: true,
     exposedHeaders: ['Content-Disposition']
 }));

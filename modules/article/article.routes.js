@@ -37,6 +37,8 @@ router.get("/misarticulos{/:page}", checkAuth, ArticuloController.listMisArticul
 
 router.get("/articulouser/:id{/:page}", ArticuloController.listArticulosPorId);
 
+router.get("/obtenido/:id", ArticuloController.leerArticulo);
+
 router.post("/aumentar/:id", ArticuloController.incrementarVisualizaciones);
 
 export default router;
