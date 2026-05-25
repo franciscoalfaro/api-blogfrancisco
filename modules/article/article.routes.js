@@ -29,9 +29,12 @@ router.post("/upload-content-image", checkAuth, imageUpload.single("file0"), pro
 
 router.get("/media/:file", ArticuloController.media);
 
+router.delete("/deleteimagen/:id", checkAuth, ArticuloController.eliminarImagen);
+
 router.get("/search/:articulo{/:page}", ArticuloController.buscador);
 
 router.get("/list{/:page}", ArticuloController.listArticulos);
+router.get("/ultimos/", ArticuloController.listMasVistos);
 
 router.get("/misarticulos{/:page}", checkAuth, ArticuloController.listMisArticulos);
 
