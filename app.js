@@ -23,6 +23,35 @@ app.use(
     helmet({
         crossOriginResourcePolicy: {
             policy: "cross-origin"
+        },
+
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+
+                imgSrc: [
+                    "'self'",
+                    "data:",
+                    "https://apiv2.franciscoalfaro.cl",
+                    "https://blog.franciscoalfaro.cl"
+                ],
+
+                styleSrc: [
+                    "'self'",
+                    "https:",
+                    "'unsafe-inline'"
+                ],
+
+                fontSrc: [
+                    "'self'",
+                    "https:",
+                    "data:"
+                ],
+
+                scriptSrc: [
+                    "'self'"
+                ]
+            }
         }
     })
 );
