@@ -17,9 +17,19 @@ import recoveryRoutes from "./modules/recovery/recovery.routes.js";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+    helmet({
+        crossOriginResourcePolicy: {
+            policy: "cross-origin"
+        }
+    })
+);
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://blog.franciscoalfaro.cl',
+    origin: [
+        'https://blog.franciscoalfaro.cl',
+        'https://www.blog.franciscoalfaro.cl'
+    ],
     credentials: true,
     exposedHeaders: ['Content-Disposition']
 }));
