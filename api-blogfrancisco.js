@@ -4,7 +4,8 @@ import app from './app.js';
 
 connection();
 
-const puerto = 3006;
+const puerto = process.env.PORT
+
 app.listen(puerto, () => {
     console.log("Server runing in port :" + puerto);
 });
