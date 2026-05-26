@@ -410,7 +410,9 @@ export const listMasVistos = async () => {
     }
 
     const articulosIds = contadores.map(contador => contador.articuloId);
-    const articulos = await Articulo.find({ _id: { $in: articulosIds } }).populate('categoria');
+    const articulos = await Articulo.find({ _id: { $in: articulosIds } })
+        .select('titulo Autor ApellidoAutor coverImage categoria fecha')
+        .populate('categoria');
 
     return {
         articulos: articulos.map(articulo => {
