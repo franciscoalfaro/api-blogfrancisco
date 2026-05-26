@@ -26,13 +26,12 @@ export const crearArticulo = async (userId, params) => {
 
     validarArt.validar(params);
 
-    let categoriaExistente = await Categoria.findOne({ userId, name: params.categoria });
+    let categoriaExistente = await Categoria.findById(params.categoria);
+    if (!categoriaExistente) {
+        throw new ServiceError('La categoría seleccionada no existe', 400);
+    }
 
     let usuarioPublicacion = await User.findOne({ _id: userId });
-
-    if (!categoriaExistente) {
-        categoriaExistente = await Categoria.create({ userId, name: params.categoria });
-    }
 
     const contenidoSanitizado = await sanitizerService.sanitizarContenido(params.contenido);
 

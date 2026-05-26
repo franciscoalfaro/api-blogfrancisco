@@ -33,7 +33,8 @@ app.use(
                     "'self'",
                     "data:",
                     "https://apiv2.franciscoalfaro.cl",
-                    "https://blog.franciscoalfaro.cl"
+                    "https://blog.franciscoalfaro.cl",
+                    "http://localhost:3000"
                 ],
 
                 styleSrc: [
@@ -59,7 +60,8 @@ app.use(
 app.use(cors({
     origin: [
         'https://blog.franciscoalfaro.cl',
-        'https://www.blog.franciscoalfaro.cl'
+        'https://www.blog.franciscoalfaro.cl',
+        'http://localhost:3000'
     ],
     credentials: true,
     exposedHeaders: ['Content-Disposition']
