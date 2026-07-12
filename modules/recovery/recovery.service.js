@@ -16,7 +16,7 @@ export const requestReset = async (email) => {
     user.resetTokenExpiration = resetTokenExpiration;
     await user.save();
 
-    const resetURL = `${process.env.FRONTEND_URL}reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     await enviarEnlaceRecuperacion(email, resetURL);
 
